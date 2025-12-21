@@ -5,9 +5,15 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar, TrendingUp, Zap } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
 
 export default async function Home() {
   const session = await auth()
+  
+  // Redirect to login if not authenticated
+  if (!session?.user) {
+    redirect('/login')
+  }
   
   // Get user settings from database
   let settings = null

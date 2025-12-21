@@ -2,8 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { muscleGroups, defaultExercises } from '@/lib/exercises'
 import { Dumbbell } from 'lucide-react'
+import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-export default function ExercisesPage() {
+export default async function ExercisesPage() {
+  const session = await auth()
+  
+  if (!session?.user) {
+    redirect('/login')
+  }
+
   return (
     <div className="space-y-8">
       <div className="space-y-2">
