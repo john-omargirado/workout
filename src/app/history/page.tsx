@@ -3,17 +3,12 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar, Check, Dumbbell } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 
 export default async function HistoryPage() {
     const session = await auth()
 
-    if (!session?.user?.id) {
-        redirect('/login')
-    }
-
     // Fetch real workout history from database
-    const workouts = await prisma.workout.findMany({
+    const workouts = session?.user?.id ? await prisma.workout.findMany({
         where: {
             userId: session.user.id,
             completed: true
@@ -32,7 +27,7 @@ export default async function HistoryPage() {
         notes: string | null
         completed: boolean
         workoutSets: Array<{ id: string }>
-    }>
+    }> : []
 
     // Calculate stats
     const now = new Date()
@@ -41,9 +36,9 @@ export default async function HistoryPage() {
     const totalSetsThisWeek = workoutsThisWeek.reduce((acc, w) => acc + w.workoutSets.length, 0)
 
     // Get user settings for training week
-    const settings = await prisma.settings.findUnique({
+    const settings = session?.user?.id ? await prisma.settings.findUnique({
         where: { userId: session.user.id }
-    })
+    }) : null
 
     const variantMap = {
         heavy: 'heavy' as const,
