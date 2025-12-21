@@ -8,6 +8,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] || "file:./wizard.db",
+    url: process.env["PRISMA_DATABASE_URL"] || process.env["DATABASE_URL"],
   },
 });
