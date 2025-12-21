@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  image         String?
+  workouts      Workout[]
+  settings      Settings?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Muscle groups for volume tracking
+model MuscleGroup {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  exercises Exercise[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// Exercise library
+model Exercise {
+  id            String       @id @default(cuid())
+  name          String
+  muscleGroupId String
+  muscleGroup   MuscleGroup  @relation(fields: [muscleGroupId], references: [id])
+  type          String       // "compound" or "isolation"
+  description   String?
+  workoutSets   WorkoutSet[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+// Workout sessions
+model Workout {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime     @default(now())
+  dayType     String       // "heavy", "light", "medium"
+  isDeload    Boolean      @default(false)
+  notes       String?
+  workoutSets WorkoutSet[]
+  completed   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Individual sets within a workout
+model WorkoutSet {
+  id         String   @id @default(cuid())
+  workoutId  String
+  workout    Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  setNumber  Int
+  weight     Float
+  reps       Int
+  targetReps Int
+  completed  Boolean  @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// User settings and progression tracking
+model Settings {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentWeek          Int       @default(1)
+  weeksUntilDeload     Int       @default(5)
+  lastDeloadDate       DateTime?
+  heavyDayRestSeconds  Int       @default(120)
+  lightDayRestSeconds  Int       @default(60)
+  mediumDayRestSeconds Int       @default(120)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
