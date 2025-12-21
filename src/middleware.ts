@@ -13,21 +13,19 @@ export default auth((req) => {
     return NextResponse.next()
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages to dashboard
   if (isAuthPage && isLoggedIn) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
   // Redirect non-logged-in users to login (except for auth pages and public API)
   if (!isLoggedIn && !isAuthPage && !isApiRoute) {
-    const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname)
-    return NextResponse.redirect(loginUrl)
+    return NextResponse.redirect(new URL('/login', req.url))
   }
 
   return NextResponse.next()
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)']
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.ico$).*)']
 }
