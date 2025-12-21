@@ -25,7 +25,14 @@ export default async function HistoryPage() {
       date: 'desc'
     },
     take: 20
-  })
+  }) as unknown as Array<{
+    id: string
+    date: Date
+    dayType: string
+    notes: string | null
+    completed: boolean
+    workoutSets: Array<{ id: string }>
+  }>
 
   // Calculate stats
   const now = new Date()
