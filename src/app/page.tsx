@@ -21,7 +21,7 @@ export default async function Home() {
         { name: 'Biceps', sets: 0, target: 9 },
         { name: 'Triceps', sets: 0, target: 9 },
     ]
-    
+
     // Workout history for contribution calendar
     let workoutHistory: { date: string; dayType: 'heavy' | 'light' | 'medium'; completed: boolean }[] = []
 

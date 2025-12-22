@@ -79,7 +79,7 @@ export default function SettingsPage() {
     const handleDeload = async () => {
         const newSettings = { ...settings, currentWeek: 1 }
         setSettings(newSettings)
-        
+
         try {
             await fetch('/api/settings', {
                 method: 'PATCH',
@@ -138,7 +138,7 @@ export default function SettingsPage() {
                         </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                        {settings.weightUnit === 'kg' 
+                        {settings.weightUnit === 'kg'
                             ? 'Weight increments: 2.5 kg per adjustment'
                             : 'Weight increments: 5 lbs per adjustment'}
                     </p>

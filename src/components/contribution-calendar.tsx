@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Flame , Calendar} from 'lucide-react'
+import { Flame, Calendar } from 'lucide-react'
 
 interface WorkoutDay {
     date: string // YYYY-MM-DD format
@@ -114,10 +114,14 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
             if (firstDayOfWeek) {
                 const month = firstDayOfWeek.getMonth()
                 if (month !== lastMonth) {
-                    labels.push({
-                        month: firstDayOfWeek.toLocaleDateString('en-US', { month: 'short' }),
-                        colStart: weekIndex,
-                    })
+                    // Only add label if there's enough space (at least 3 weeks gap from previous)
+                    const lastLabel = labels[labels.length - 1]
+                    if (!lastLabel || weekIndex - lastLabel.colStart >= 3) {
+                        labels.push({
+                            month: firstDayOfWeek.toLocaleDateString('en-US', { month: 'short' }),
+                            colStart: weekIndex,
+                        })
+                    }
                     lastMonth = month
                 }
             }
@@ -151,16 +155,17 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 {/* Calendar Grid */}
                 <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4">
                     <div className="inline-block min-w-max">
-                        {/* Month labels */}
-                        <div className="flex gap-1 mb-2 ml-8">
-                            {calendarData.map((week, weekIndex) => {
-                                const label = monthLabels.find(l => l.colStart === weekIndex)
-                                return (
-                                    <div key={weekIndex} className="w-4 text-[11px] font-medium text-muted-foreground">
-                                        {label?.month || ''}
-                                    </div>
-                                )
-                            })}
+                        {/* Month labels - use relative positioning */}
+                        <div className="relative h-5 mb-2 ml-8">
+                            {monthLabels.map((label, idx) => (
+                                <span
+                                    key={idx}
+                                    className="absolute text-[11px] font-medium text-muted-foreground whitespace-nowrap"
+                                    style={{ left: `${label.colStart * 20}px` }}
+                                >
+                                    {label.month}
+                                </span>
+                            ))}
                         </div>
 
                         {/* Day rows */}
