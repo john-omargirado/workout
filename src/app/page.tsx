@@ -77,15 +77,6 @@ export default async function Home() {
             },
             orderBy: { date: 'desc' }
         })
-        
-        // Debug: Log fetched workouts
-        console.log('SERVER: Fetched allWorkouts:', allWorkouts.length, 'workouts');
-        console.log('SERVER: Sample workout:', allWorkouts[0] ? {
-            id: allWorkouts[0].id,
-            date: allWorkouts[0].date,
-            dayType: allWorkouts[0].dayType,
-            completed: allWorkouts[0].completed
-        } : 'no workouts');
 
         // Filter for this week's workouts
         const workouts = allWorkouts.filter(w => w.date >= startOfWeek)
@@ -103,9 +94,6 @@ export default async function Home() {
             dayType: w.dayType as 'heavy' | 'light' | 'medium',
             completed: w.completed,
         }))
-        
-        // Debug: Log transformed workout history
-        console.log('SERVER: workoutHistory:', workoutHistory);
 
         // Find last completed workout for each day type
         const completedWorkouts = allWorkouts.filter(w => w.completed)

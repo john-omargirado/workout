@@ -42,9 +42,6 @@ const formatDateUTC = (date: Date): string => {
 }
 
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
-    // Debug: Log incoming workouts
-    console.log('ContributionCalendar received workouts:', workouts);
-    
     const calendarData = useMemo(() => {
         const today = new Date()
         // Use UTC hours to avoid timezone issues when comparing with UTC-formatted dates
@@ -60,9 +57,6 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 workoutMap.set(w.date, w)
             }
         })
-        
-        // Debug: Log the workout map
-        console.log('workoutMap entries:', Array.from(workoutMap.entries()));
 
         // Find the start of the current week (Sunday) - use UTC day
         const endOfCalendar = new Date(today)
@@ -83,12 +77,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         while (currentDate <= today) {
             const dateStr = formatDateUTC(currentDate)
             const workout = workoutMap.get(dateStr)
-            
-            // Debug: Log when we find a workout match
-            if (workout) {
-                console.log('FOUND WORKOUT MATCH:', { dateStr, workout });
-            }
-            
+
             days.push({
                 date: new Date(currentDate),
                 workout: workout,
@@ -238,17 +227,6 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                             const isToday = day.date.toDateString() === new Date().toDateString()
                                             const isFuture = day.date > new Date()
                                             const hasWorkout = day.workout?.completed
-                                            
-                                            // Debug: log today's cell
-                                            if (isToday) {
-                                                console.log('TODAY CELL:', {
-                                                    date: day.date.toISOString(),
-                                                    dateStr: formatDateUTC(day.date),
-                                                    workout: day.workout,
-                                                    hasWorkout,
-                                                    isFuture
-                                                });
-                                            }
 
                                             return (
                                                 <div
@@ -278,33 +256,18 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 </div>
 
                 {/* Legend - Responsive */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t">
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="font-medium">Activity:</span>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-muted/60" />
-                            <span>None</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-400" />
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-500" />
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-600" />
-                        </div>
-                        <span>Active</span>
+                <div className="flex items-center justify-end gap-4 mt-4 pt-4 border-t text-xs">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 rounded-[3px] bg-red-500 shadow-sm" />
+                        <span className="text-muted-foreground font-medium">Heavy</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-red-500 shadow-sm" />
-                            <span className="text-muted-foreground font-medium">Heavy</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-500 shadow-sm" />
-                            <span className="text-muted-foreground font-medium">Light</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3.5 h-3.5 rounded-[3px] bg-yellow-500 shadow-sm" />
-                            <span className="text-muted-foreground font-medium">Medium</span>
-                        </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 rounded-[3px] bg-green-500 shadow-sm" />
+                        <span className="text-muted-foreground font-medium">Light</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-3.5 h-3.5 rounded-[3px] bg-yellow-500 shadow-sm" />
+                        <span className="text-muted-foreground font-medium">Medium</span>
                     </div>
                 </div>
             </CardContent>
