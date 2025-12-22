@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { Dumbbell, Home, BookOpen, Settings, Calendar, LogOut, User } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
+import { DarkModeToggle } from '@/components/dark-mode-toggle'
 
 export function Navbar() {
     const { data: session, status } = useSession()
@@ -17,8 +19,8 @@ export function Navbar() {
                 </Link>
 
                 <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                    {session ? (
-                        <>
+                    <div className="flex items-center gap-6">
+                        {session ? (
                             <nav className="flex items-center gap-6 text-sm">
                                 <Link
                                     href="/"
@@ -49,7 +51,12 @@ export function Navbar() {
                                     <span className="hidden sm:inline">Settings</span>
                                 </Link>
                             </nav>
-                            <div className="flex items-center gap-4 ml-4">
+                        ) : null}
+                    </div>
+                    <div className="flex items-center gap-4 ml-4">
+                        <DarkModeToggle />
+                        {session ? (
+                            <>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <User className="h-4 w-4" />
                                     <span className="hidden sm:inline">{session.user?.name || session.user?.email}</span>
@@ -63,22 +70,22 @@ export function Navbar() {
                                     <LogOut className="h-4 w-4" />
                                     <span className="hidden sm:inline">Sign Out</span>
                                 </Button>
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                {status !== 'loading' && (
+                                    <>
+                                        <Link href="/login">
+                                            <Button variant="ghost" size="sm">Sign In</Button>
+                                        </Link>
+                                        <Link href="/register">
+                                            <Button size="sm">Get Started</Button>
+                                        </Link>
+                                    </>
+                                )}
                             </div>
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            {status !== 'loading' && (
-                                <>
-                                    <Link href="/login">
-                                        <Button variant="ghost" size="sm">Sign In</Button>
-                                    </Link>
-                                    <Link href="/register">
-                                        <Button size="sm">Get Started</Button>
-                                    </Link>
-                                </>
-                            )}
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </nav>
