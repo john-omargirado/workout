@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Check, Plus, Minus } from 'lucide-react'
@@ -42,6 +42,19 @@ export function SetLogger({
     const [weight, setWeight] = useState(initialWeight)
     const [reps, setReps] = useState(initialReps)
     const [completed, setCompleted] = useState(isCompleted)
+
+    // Sync completed state with prop when it changes (e.g., from parent's data)
+    useEffect(() => {
+        setCompleted(isCompleted)
+    }, [isCompleted])
+
+    // Reset weight/reps when switching to a different exercise/set that isn't completed
+    useEffect(() => {
+        if (!isCompleted) {
+            setWeight(initialWeight)
+            setReps(initialReps)
+        }
+    }, [exerciseName, setNumber, isCompleted, initialWeight, initialReps])
 
     const weightIncrement = getWeightIncrement(weightUnit)
 

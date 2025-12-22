@@ -193,6 +193,10 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
         return completedSets.some(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
     }
 
+    const getSetData = (exerciseIndex: number, setNumber: number): SetData | undefined => {
+        return completedSets.find(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
+    }
+
     const getExerciseProgress = (exerciseIndex: number) => {
         return completedSets.filter(s => s.exerciseIndex === exerciseIndex).length
     }
@@ -381,19 +385,24 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                             {isExpanded && (
                                 <CardContent className="pt-0 pb-3 px-3 animate-in">
                                     <div className="space-y-2">
-                                        {[1, 2, 3].map((setNumber) => (
-                                            <SetLogger
-                                                key={`${exerciseIndex}-${setNumber}`}
-                                                exerciseName={exercise.exercise}
-                                                muscleGroup={exercise.muscle}
-                                                setNumber={setNumber}
-                                                targetReps={exercise.reps}
-                                                onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
-                                                isCompleted={isSetCompleted(exerciseIndex, setNumber)}
-                                                dayType={normalizedDayType}
-                                                weightUnit={weightUnit}
-                                            />
-                                        ))}
+                                        {[1, 2, 3].map((setNumber) => {
+                                            const setData = getSetData(exerciseIndex, setNumber)
+                                            return (
+                                                <SetLogger
+                                                    key={`${exerciseIndex}-${setNumber}`}
+                                                    exerciseName={exercise.exercise}
+                                                    muscleGroup={exercise.muscle}
+                                                    setNumber={setNumber}
+                                                    targetReps={exercise.reps}
+                                                    initialWeight={setData?.weight ?? 0}
+                                                    initialReps={setData?.reps ?? 0}
+                                                    onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
+                                                    isCompleted={isSetCompleted(exerciseIndex, setNumber)}
+                                                    dayType={normalizedDayType}
+                                                    weightUnit={weightUnit}
+                                                />
+                                            )
+                                        })}
                                     </div>
                                 </CardContent>
                             )}

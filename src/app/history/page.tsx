@@ -11,7 +11,7 @@ export default async function HistoryPage() {
     const settings = session?.user?.id ? await prisma.settings.findUnique({
         where: { userId: session.user.id }
     }) : null
-    
+
     const weightUnit = settings?.weightUnit || 'kg'
 
     // Fetch real workout history from database
@@ -37,7 +37,7 @@ export default async function HistoryPage() {
         dayType: string
         notes: string | null
         completed: boolean
-        workoutSets: Array<{ 
+        workoutSets: Array<{
             id: string
             weight: number
             reps: number
@@ -58,11 +58,11 @@ export default async function HistoryPage() {
         }
         return `${weightKg.toFixed(1)} kg`
     }
-    
+
     // Calculate total volume lifted this week
-    const totalVolumeThisWeek = workoutsThisWeek.reduce((acc, w) => 
+    const totalVolumeThisWeek = workoutsThisWeek.reduce((acc, w) =>
         acc + w.workoutSets.reduce((setAcc, set) => setAcc + (set.weight * set.reps), 0)
-    , 0)
+        , 0)
 
     const variantMap = {
         heavy: 'heavy' as const,

@@ -37,7 +37,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
     const calendarData = useMemo(() => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
-        
+
         // Create a map of workouts by date for quick lookup
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach(w => {
@@ -47,18 +47,18 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         // Find the start of the current week (Sunday)
         const endOfCalendar = new Date(today)
         const currentDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
-        
+
         // Go back to get the start date (N weeks ago, starting from a Sunday)
         const startOfCalendar = new Date(today)
         startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
-        
+
         // Adjust to start on the Sunday of that week
         const startDayOfWeek = startOfCalendar.getDay()
         startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
 
         const days: { date: Date; workout?: WorkoutDay }[] = []
         const currentDate = new Date(startOfCalendar)
-        
+
         // Generate all days from start to today
         while (currentDate <= today) {
             const dateStr = currentDate.toISOString().split('T')[0]
@@ -68,7 +68,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
             })
             currentDate.setDate(currentDate.getDate() + 1)
         }
-        
+
         // Add remaining days to complete the current week
         while (days.length % 7 !== 0) {
             days.push({
