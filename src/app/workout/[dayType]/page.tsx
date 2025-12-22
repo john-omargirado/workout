@@ -237,7 +237,15 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     }
 
     const getSetData = (exerciseIndex: number, setNumber: number): SetData | undefined => {
-        return completedSets.find(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
+        const set = completedSets.find(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
+        if (!set) return undefined
+        
+        // Weight is stored in kg in database - convert to user's preferred unit for display
+        const displayWeight = weightUnit === 'lbs' ? Math.round(set.weight / 0.453592) : set.weight
+        return {
+            ...set,
+            weight: displayWeight
+        }
     }
 
     const getExerciseProgress = (exerciseIndex: number) => {
