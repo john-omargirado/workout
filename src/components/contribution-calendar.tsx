@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Flame, Calendar } from 'lucide-react'
 
@@ -43,49 +43,38 @@ const formatDateLocal = (date: Date): string => {
 }
 
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
-    const calendarData = useMemo(() => {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0) // Use local time
+    type CalendarDay = { date: Date; workout?: WorkoutDay }
+    const [calendarData, setCalendarData] = useState<CalendarDay[][] | null>(null)
+    const [currentStreak, setCurrentStreak] = useState<number | null>(null)
 
-        // Create a map of workouts by date for quick lookup
-        // Only keep completed workouts, or don't overwrite if already completed
+    useEffect(() => {
+        // Calendar grid
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
         const workoutMap = new Map<string, WorkoutDay>()
-        workouts.forEach(w => {
+        workouts.forEach((w: WorkoutDay) => {
             const existing = workoutMap.get(w.date)
-            // Only set if: no existing entry, OR new one is completed and existing isn't
             if (!existing || (w.completed && !existing.completed)) {
                 workoutMap.set(w.date, w)
             }
         })
-
-        // Find the start of the current week (Sunday) - use local day
         const endOfCalendar = new Date(today)
-        const currentDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
-
-        // Go back to get the start date (N weeks ago, starting from a Sunday)
+        const currentDayOfWeek = today.getDay()
         const startOfCalendar = new Date(today)
         startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
-
-        // Adjust to start on the Sunday of that week
         const startDayOfWeek = startOfCalendar.getDay()
         startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
-
-        const days: { date: Date; workout?: WorkoutDay }[] = []
+        const days: CalendarDay[] = []
         const currentDate = new Date(startOfCalendar)
-
-        // Generate all days from start to today
         while (currentDate <= today) {
             const dateStr = formatDateLocal(currentDate)
             const workout = workoutMap.get(dateStr)
-
             days.push({
                 date: new Date(currentDate),
                 workout: workout,
             })
             currentDate.setDate(currentDate.getDate() + 1)
         }
-
-        // Add remaining days to complete the current week
         while (days.length % 7 !== 0) {
             days.push({
                 date: new Date(currentDate),
@@ -93,39 +82,29 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
             })
             currentDate.setDate(currentDate.getDate() + 1)
         }
-
-        // Group by weeks (7 days each, Sun-Sat)
-        const weekGroups: typeof days[] = []
+        const weekGroups: CalendarDay[][] = []
         for (let i = 0; i < days.length; i += 7) {
             weekGroups.push(days.slice(i, i + 7))
         }
+        setCalendarData(weekGroups)
 
-        return weekGroups
-    }, [workouts, weeks])
-
-    const totalWorkouts = workouts.filter(w => w.completed).length
-    const currentStreak = useMemo(() => {
+        // Streak
         let streak = 0
-        const today = new Date()
-        today.setHours(0, 0, 0, 0) // Use local time
-
-        // Sort workouts by date descending
         const sortedWorkouts = [...workouts]
-            .filter(w => w.completed)
+            .filter((w: WorkoutDay) => w.completed)
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-
-        if (sortedWorkouts.length === 0) return 0
-
-        // Check if there's a workout today or yesterday to start the streak
-        const lastWorkoutDate = new Date(sortedWorkouts[0].date + 'T00:00:00') // local time
-
+        if (sortedWorkouts.length === 0) {
+            setCurrentStreak(0)
+            return
+        }
+        const lastWorkoutDate = new Date(sortedWorkouts[0].date + 'T00:00:00')
         const daysDiff = Math.floor((today.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysDiff > 1) return 0 // Streak broken
-
-        // Count consecutive days with workouts
-        const workoutDates = new Set(sortedWorkouts.map(w => w.date))
+        if (daysDiff > 1) {
+            setCurrentStreak(0)
+            return
+        }
+        const workoutDates = new Set(sortedWorkouts.map((w: WorkoutDay) => w.date))
         let checkDate = new Date(lastWorkoutDate)
-
         while (true) {
             const dateStr = formatDateLocal(checkDate)
             if (workoutDates.has(dateStr)) {
@@ -135,21 +114,21 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 break
             }
         }
+        setCurrentStreak(streak)
+    }, [workouts, weeks])
 
-        return streak
-    }, [workouts])
+    const totalWorkouts = workouts.filter((w: WorkoutDay) => w.completed).length
 
     const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
     const monthLabels = useMemo(() => {
+        if (!calendarData) return []
         const labels: { month: string; colStart: number }[] = []
         let lastMonth = -1
-
         calendarData.forEach((week, weekIndex) => {
             const firstDayOfWeek = week[0]?.date
             if (firstDayOfWeek) {
                 const month = firstDayOfWeek.getMonth()
                 if (month !== lastMonth) {
-                    // Only add label if there's enough space (at least 3 weeks gap from previous)
                     const lastLabel = labels[labels.length - 1]
                     if (!lastLabel || weekIndex - lastLabel.colStart >= 3) {
                         labels.push({
@@ -161,9 +140,10 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 }
             }
         })
-
         return labels
     }, [calendarData])
+
+    if (!calendarData || currentStreak === null) return null
 
     return (
         <Card className="overflow-hidden">
