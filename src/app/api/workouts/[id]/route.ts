@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(
     request: Request,
@@ -74,6 +75,12 @@ export async function PATCH(
             where: { id },
             data: body
         })
+
+        // Revalidate dashboard and history to show updated workout data
+        if (body.completed) {
+            revalidatePath('/')
+            revalidatePath('/history')
+        }
 
         return NextResponse.json(workout)
     } catch (error) {

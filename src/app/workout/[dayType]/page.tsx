@@ -98,18 +98,18 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
             try {
                 // First, check for an existing active workout for today
                 const existingResponse = await fetch(`/api/workouts?dayType=${normalizedDayType}&active=true`)
-                
+
                 if (existingResponse.ok) {
                     const existingWorkout = await existingResponse.json()
-                    
+
                     if (existingWorkout && existingWorkout.id) {
                         // Found existing workout - load its sets
                         setWorkoutId(existingWorkout.id)
-                        
+
                         if (existingWorkout.completed) {
                             setWorkoutComplete(true)
                         }
-                        
+
                         // Convert saved sets to our SetData format
                         if (existingWorkout.workoutSets && existingWorkout.workoutSets.length > 0) {
                             const loadedSets: SetData[] = existingWorkout.workoutSets.map((set: {
@@ -129,10 +129,10 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                                     reps: set.reps
                                 }
                             }).filter((set: SetData) => set.exerciseIndex !== -1)
-                            
+
                             setCompletedSets(loadedSets)
                         }
-                        
+
                         setIsLoading(false)
                         return
                     }
@@ -239,7 +239,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     const getSetData = (exerciseIndex: number, setNumber: number): SetData | undefined => {
         const set = completedSets.find(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
         if (!set) return undefined
-        
+
         // Weight is stored in kg in database - convert to user's preferred unit for display
         const displayWeight = weightUnit === 'lbs' ? Math.round(set.weight / 0.453592) : set.weight
         return {
@@ -325,24 +325,24 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
 
             {/* Progress Card - Compact */}
             {!isLoading && (
-            <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight} animate-in`}>
-                <CardContent className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                        <Dumbbell className={`h-5 w-5 ${styles.text} shrink-0`} />
-                        <div className="flex-1 min-w-0">
-                            <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${styles.gradient} rounded-full transition-all duration-500 ease-out`}
-                                    style={{ width: `${progressPercent}%` }}
-                                />
+                <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight} animate-in`}>
+                    <CardContent className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                            <Dumbbell className={`h-5 w-5 ${styles.text} shrink-0`} />
+                            <div className="flex-1 min-w-0">
+                                <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                        className={`absolute inset-y-0 left-0 bg-gradient-to-r ${styles.gradient} rounded-full transition-all duration-500 ease-out`}
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                </div>
                             </div>
+                            <Badge variant={variantMap[normalizedDayType]} className="text-xs shrink-0">
+                                {completedCount}/{totalSets}
+                            </Badge>
                         </div>
-                        <Badge variant={variantMap[normalizedDayType]} className="text-xs shrink-0">
-                            {completedCount}/{totalSets}
-                        </Badge>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Workout Complete Card */}
@@ -391,91 +391,91 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
 
             {/* Exercises - Responsive Grid */}
             {!isLoading && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {workout.map((exercise, exerciseIndex) => {
-                    const exerciseProgress = getExerciseProgress(exerciseIndex)
-                    const isExpanded = expandedExercise === exerciseIndex
-                    const isComplete = exerciseProgress === 3
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {workout.map((exercise, exerciseIndex) => {
+                        const exerciseProgress = getExerciseProgress(exerciseIndex)
+                        const isExpanded = expandedExercise === exerciseIndex
+                        const isComplete = exerciseProgress === 3
 
-                    return (
-                        <Card
-                            key={exerciseIndex}
-                            className={`transition-all duration-300 overflow-hidden ${isComplete
-                                ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
-                                : styles.border
-                                } ${isExpanded ? 'ring-2 ' + styles.ring + ' lg:col-span-2' : ''}`}
-                        >
-                            {/* Exercise Header - Compact */}
-                            <CardHeader
-                                className={`cursor-pointer transition-colors py-3 px-4 ${isExpanded ? styles.bgLight : 'hover:bg-muted/50'}`}
-                                onClick={() => setExpandedExercise(isExpanded ? null : exerciseIndex)}
+                        return (
+                            <Card
+                                key={exerciseIndex}
+                                className={`transition-all duration-300 overflow-hidden ${isComplete
+                                    ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
+                                    : styles.border
+                                    } ${isExpanded ? 'ring-2 ' + styles.ring + ' lg:col-span-2' : ''}`}
                             >
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0
+                                {/* Exercise Header - Compact */}
+                                <CardHeader
+                                    className={`cursor-pointer transition-colors py-3 px-4 ${isExpanded ? styles.bgLight : 'hover:bg-muted/50'}`}
+                                    onClick={() => setExpandedExercise(isExpanded ? null : exerciseIndex)}
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0
                                             ${isComplete ? 'bg-gradient-to-br from-green-500 to-emerald-600' : `bg-gradient-to-br ${styles.gradient}`}`}>
-                                            {isComplete ? <Check className="h-4 w-4" /> : exerciseIndex + 1}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <CardTitle className="text-sm truncate">{exercise.exercise}</CardTitle>
-                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                                    {exercise.muscle}
-                                                </Badge>
+                                                {isComplete ? <Check className="h-4 w-4" /> : exerciseIndex + 1}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <CardTitle className="text-sm truncate">{exercise.exercise}</CardTitle>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                        {exercise.muscle}
+                                                    </Badge>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        {/* Mini progress bar */}
-                                        <div className="flex gap-0.5">
-                                            {[1, 2, 3].map((set) => (
-                                                <div
-                                                    key={set}
-                                                    className={`h-1.5 w-4 rounded-sm transition-colors ${isSetCompleted(exerciseIndex, set)
-                                                        ? 'bg-green-500'
-                                                        : 'bg-muted'
-                                                        }`}
-                                                />
-                                            ))}
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {/* Mini progress bar */}
+                                            <div className="flex gap-0.5">
+                                                {[1, 2, 3].map((set) => (
+                                                    <div
+                                                        key={set}
+                                                        className={`h-1.5 w-4 rounded-sm transition-colors ${isSetCompleted(exerciseIndex, set)
+                                                            ? 'bg-green-500'
+                                                            : 'bg-muted'
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {isExpanded ? (
+                                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                            )}
                                         </div>
-                                        {isExpanded ? (
-                                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                        ) : (
-                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                        )}
                                     </div>
-                                </div>
-                            </CardHeader>
+                                </CardHeader>
 
-                            {/* Sets - Expandable with compact spacing */}
-                            {isExpanded && (
-                                <CardContent className="pt-0 pb-3 px-3 animate-in">
-                                    <div className="space-y-2">
-                                        {[1, 2, 3].map((setNumber) => {
-                                            const setData = getSetData(exerciseIndex, setNumber)
-                                            return (
-                                                <SetLogger
-                                                    key={`${exerciseIndex}-${setNumber}`}
-                                                    exerciseName={exercise.exercise}
-                                                    muscleGroup={exercise.muscle}
-                                                    setNumber={setNumber}
-                                                    targetReps={exercise.reps}
-                                                    initialWeight={setData?.weight ?? 0}
-                                                    initialReps={setData?.reps ?? 0}
-                                                    onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
-                                                    isCompleted={isSetCompleted(exerciseIndex, setNumber)}
-                                                    dayType={normalizedDayType}
-                                                    weightUnit={weightUnit}
-                                                />
-                                            )
-                                        })}
-                                    </div>
-                                </CardContent>
-                            )}
-                        </Card>
-                    )
-                })}
-            </div>
+                                {/* Sets - Expandable with compact spacing */}
+                                {isExpanded && (
+                                    <CardContent className="pt-0 pb-3 px-3 animate-in">
+                                        <div className="space-y-2">
+                                            {[1, 2, 3].map((setNumber) => {
+                                                const setData = getSetData(exerciseIndex, setNumber)
+                                                return (
+                                                    <SetLogger
+                                                        key={`${exerciseIndex}-${setNumber}`}
+                                                        exerciseName={exercise.exercise}
+                                                        muscleGroup={exercise.muscle}
+                                                        setNumber={setNumber}
+                                                        targetReps={exercise.reps}
+                                                        initialWeight={setData?.weight ?? 0}
+                                                        initialReps={setData?.reps ?? 0}
+                                                        onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
+                                                        isCompleted={isSetCompleted(exerciseIndex, setNumber)}
+                                                        dayType={normalizedDayType}
+                                                        weightUnit={weightUnit}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                    </CardContent>
+                                )}
+                            </Card>
+                        )
+                    })}
+                </div>
             )}
         </div>
     )

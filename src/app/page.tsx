@@ -7,6 +7,9 @@ import { Calendar, TrendingUp, Zap } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Force dynamic rendering to always show fresh workout data
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
     const session = await auth()
 
