@@ -42,6 +42,9 @@ const formatDateUTC = (date: Date): string => {
 }
 
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
+    // Debug: Log incoming workouts
+    console.log('ContributionCalendar received workouts:', workouts);
+    
     const calendarData = useMemo(() => {
         const today = new Date()
         // Use UTC hours to avoid timezone issues when comparing with UTC-formatted dates
@@ -52,6 +55,9 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         workouts.forEach(w => {
             workoutMap.set(w.date, w)
         })
+        
+        // Debug: Log the workout map
+        console.log('workoutMap entries:', Array.from(workoutMap.entries()));
 
         // Find the start of the current week (Sunday) - use UTC day
         const endOfCalendar = new Date(today)
@@ -71,9 +77,16 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         // Generate all days from start to today
         while (currentDate <= today) {
             const dateStr = formatDateUTC(currentDate)
+            const workout = workoutMap.get(dateStr)
+            
+            // Debug: Log when we find a workout match
+            if (workout) {
+                console.log('FOUND WORKOUT MATCH:', { dateStr, workout });
+            }
+            
             days.push({
                 date: new Date(currentDate),
-                workout: workoutMap.get(dateStr),
+                workout: workout,
             })
             currentDate.setUTCDate(currentDate.getUTCDate() + 1)
         }
@@ -220,6 +233,17 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                             const isToday = day.date.toDateString() === new Date().toDateString()
                                             const isFuture = day.date > new Date()
                                             const hasWorkout = day.workout?.completed
+                                            
+                                            // Debug: log today's cell
+                                            if (isToday) {
+                                                console.log('TODAY CELL:', {
+                                                    date: day.date.toISOString(),
+                                                    dateStr: formatDateUTC(day.date),
+                                                    workout: day.workout,
+                                                    hasWorkout,
+                                                    isFuture
+                                                });
+                                            }
 
                                             return (
                                                 <div
