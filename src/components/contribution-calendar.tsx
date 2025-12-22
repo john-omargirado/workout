@@ -51,9 +51,14 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         today.setUTCHours(0, 0, 0, 0)
 
         // Create a map of workouts by date for quick lookup
+        // Only keep completed workouts, or don't overwrite if already completed
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach(w => {
-            workoutMap.set(w.date, w)
+            const existing = workoutMap.get(w.date)
+            // Only set if: no existing entry, OR new one is completed and existing isn't
+            if (!existing || (w.completed && !existing.completed)) {
+                workoutMap.set(w.date, w)
+            }
         })
         
         // Debug: Log the workout map
