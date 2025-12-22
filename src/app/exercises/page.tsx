@@ -6,9 +6,8 @@ import Image from 'next/image'
 
 function ExerciseCard({ exercise, variant }: { exercise: Exercise; variant: 'compound' | 'isolation' }) {
     return (
-        <div className={`group relative rounded-lg border bg-card p-3 transition-all hover:shadow-md ${
-            variant === 'compound' ? 'border-red-200 hover:border-red-300' : 'border-green-200 hover:border-green-300'
-        }`}>
+        <div className={`group relative rounded-lg border bg-card p-3 transition-all hover:shadow-md ${variant === 'compound' ? 'border-red-200 hover:border-red-300' : 'border-green-200 hover:border-green-300'
+            }`}>
             <div className="flex items-start gap-3">
                 {exercise.image && (
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
@@ -68,10 +67,10 @@ export default function ExercisesPage() {
                                             </h4>
                                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                                 {exercises.compound.map((exercise) => (
-                                                    <ExerciseCard 
-                                                        key={exercise.name} 
-                                                        exercise={exercise} 
-                                                        variant="compound" 
+                                                    <ExerciseCard
+                                                        key={exercise.name}
+                                                        exercise={exercise}
+                                                        variant="compound"
                                                     />
                                                 ))}
                                             </div>
@@ -87,10 +86,10 @@ export default function ExercisesPage() {
                                             </h4>
                                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                                 {exercises.isolation.map((exercise) => (
-                                                    <ExerciseCard 
-                                                        key={exercise.name} 
-                                                        exercise={exercise} 
-                                                        variant="isolation" 
+                                                    <ExerciseCard
+                                                        key={exercise.name}
+                                                        exercise={exercise}
+                                                        variant="isolation"
                                                     />
                                                 ))}
                                             </div>
