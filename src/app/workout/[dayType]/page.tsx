@@ -69,6 +69,25 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     const [workoutId, setWorkoutId] = useState<string | null>(null)
     const [isCreatingWorkout, setIsCreatingWorkout] = useState(false)
     const [savingSet, setSavingSet] = useState(false)
+    const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
+
+    // Fetch user settings (including weight unit)
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/api/settings')
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data.weightUnit) {
+                        setWeightUnit(data.weightUnit as 'kg' | 'lbs')
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error)
+            }
+        }
+        fetchSettings()
+    }, [])
 
     // Create a new workout session when component mounts
     useEffect(() => {
@@ -368,6 +387,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                                                 onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
                                                 isCompleted={isSetCompleted(exerciseIndex, setNumber)}
                                                 dayType={normalizedDayType}
+                                                weightUnit={weightUnit}
                                             />
                                         ))}
                                     </div>

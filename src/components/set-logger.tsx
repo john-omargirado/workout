@@ -15,6 +15,7 @@ interface SetLoggerProps {
     onComplete: (weight: number, reps: number) => void
     isCompleted?: boolean
     dayType?: 'heavy' | 'light' | 'medium'
+    weightUnit?: 'kg' | 'lbs'
 }
 
 const dayTypeGradients = {
@@ -22,6 +23,9 @@ const dayTypeGradients = {
     light: 'from-green-500 to-emerald-600',
     medium: 'from-yellow-400 to-amber-500',
 }
+
+// Weight increment based on unit
+const getWeightIncrement = (unit: 'kg' | 'lbs') => unit === 'kg' ? 2.5 : 5
 
 export function SetLogger({
     exerciseName,
@@ -32,16 +36,21 @@ export function SetLogger({
     initialReps = 0,
     onComplete,
     isCompleted = false,
-    dayType = 'heavy'
+    dayType = 'heavy',
+    weightUnit = 'kg'
 }: SetLoggerProps) {
     const [weight, setWeight] = useState(initialWeight)
     const [reps, setReps] = useState(initialReps)
     const [completed, setCompleted] = useState(isCompleted)
 
+    const weightIncrement = getWeightIncrement(weightUnit)
+
     const handleComplete = () => {
         if (weight === 0 && reps === 0) return
         setCompleted(true)
-        onComplete(weight, reps)
+        // Always save weight in kg (convert if needed)
+        const weightInKg = weightUnit === 'lbs' ? weight * 0.453592 : weight
+        onComplete(weightInKg, reps)
     }
 
     const adjustWeight = (amount: number) => {
@@ -96,7 +105,7 @@ export function SetLogger({
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 rounded-lg shrink-0"
-                            onClick={() => adjustWeight(-2.5)}
+                            onClick={() => adjustWeight(-weightIncrement)}
                             disabled={completed}
                         >
                             <Minus className="h-3 w-3" />
@@ -107,16 +116,16 @@ export function SetLogger({
                                 value={weight || ''}
                                 placeholder="0"
                                 onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
-                                className="text-center h-8 text-sm font-semibold rounded-lg pr-6"
+                                className="text-center h-8 text-sm font-semibold rounded-lg pr-7"
                                 disabled={completed}
                             />
-                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">kg</span>
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">{weightUnit}</span>
                         </div>
                         <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 rounded-lg shrink-0"
-                            onClick={() => adjustWeight(2.5)}
+                            onClick={() => adjustWeight(weightIncrement)}
                             disabled={completed}
                         >
                             <Plus className="h-3 w-3" />
@@ -178,7 +187,7 @@ export function SetLogger({
                         variant="outline"
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
-                        onClick={() => adjustWeight(-2.5)}
+                        onClick={() => adjustWeight(-weightIncrement)}
                         disabled={completed}
                     >
                         <Minus className="h-3 w-3" />
@@ -189,16 +198,16 @@ export function SetLogger({
                             value={weight || ''}
                             placeholder="0"
                             onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
-                            className="text-center h-9 text-base font-semibold rounded-lg pr-8"
+                            className="text-center h-9 text-base font-semibold rounded-lg pr-9"
                             disabled={completed}
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">kg</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{weightUnit}</span>
                     </div>
                     <Button
                         variant="outline"
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
-                        onClick={() => adjustWeight(2.5)}
+                        onClick={() => adjustWeight(weightIncrement)}
                         disabled={completed}
                     >
                         <Plus className="h-3 w-3" />

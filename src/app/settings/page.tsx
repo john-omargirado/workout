@@ -1,39 +1,103 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Settings as SettingsIcon, Timer, Calendar, RotateCcw, Save } from 'lucide-react'
+import { Settings as SettingsIcon, Timer, Calendar, RotateCcw, Save, Scale, Loader2 } from 'lucide-react'
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState({
-        heavyRestSeconds: 120,
-        lightRestSeconds: 60,
-        mediumRestSeconds: 120,
+        heavyDayRestSeconds: 120,
+        lightDayRestSeconds: 60,
+        mediumDayRestSeconds: 120,
         weeksUntilDeload: 5,
-        currentWeek: 3,
+        currentWeek: 1,
+        weightUnit: 'kg' as 'kg' | 'lbs',
     })
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
 
-    const handleSave = () => {
-        // In production, this would save to the database
-        alert('Settings saved!')
+    // Fetch settings on mount
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch('/api/settings')
+                if (response.ok) {
+                    const data = await response.json()
+                    setSettings({
+                        heavyDayRestSeconds: data.heavyDayRestSeconds || 120,
+                        lightDayRestSeconds: data.lightDayRestSeconds || 60,
+                        mediumDayRestSeconds: data.mediumDayRestSeconds || 120,
+                        weeksUntilDeload: data.weeksUntilDeload || 5,
+                        currentWeek: data.currentWeek || 1,
+                        weightUnit: data.weightUnit || 'kg',
+                    })
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchSettings()
+    }, [])
+
+    const handleSave = async () => {
+        setSaving(true)
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings),
+            })
+            if (response.ok) {
+                alert('Settings saved successfully!')
+            } else {
+                alert('Failed to save settings')
+            }
+        } catch (error) {
+            console.error('Error saving settings:', error)
+            alert('Error saving settings')
+        } finally {
+            setSaving(false)
+        }
     }
 
     const handleReset = () => {
         setSettings({
-            heavyRestSeconds: 120,
-            lightRestSeconds: 60,
-            mediumRestSeconds: 120,
+            heavyDayRestSeconds: 120,
+            lightDayRestSeconds: 60,
+            mediumDayRestSeconds: 120,
             weeksUntilDeload: 5,
             currentWeek: 1,
+            weightUnit: 'kg',
         })
     }
 
-    const handleDeload = () => {
-        setSettings(prev => ({ ...prev, currentWeek: 1 }))
-        alert('Deload completed! Week reset to 1.')
+    const handleDeload = async () => {
+        const newSettings = { ...settings, currentWeek: 1 }
+        setSettings(newSettings)
+        
+        try {
+            await fetch('/api/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentWeek: 1 }),
+            })
+            alert('Deload completed! Week reset to 1.')
+        } catch (error) {
+            console.error('Error updating deload:', error)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        )
     }
 
     return (
@@ -44,6 +108,42 @@ export default function SettingsPage() {
                     Customize your workout preferences and rest periods
                 </p>
             </div>
+
+            {/* Weight Unit Settings */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Scale className="h-5 w-5" />
+                        Weight Unit
+                    </CardTitle>
+                    <CardDescription>
+                        Choose your preferred weight unit for logging exercises
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex gap-2">
+                        <Button
+                            variant={settings.weightUnit === 'kg' ? 'default' : 'outline'}
+                            onClick={() => setSettings(prev => ({ ...prev, weightUnit: 'kg' }))}
+                            className={settings.weightUnit === 'kg' ? 'bg-primary' : ''}
+                        >
+                            Kilograms (kg)
+                        </Button>
+                        <Button
+                            variant={settings.weightUnit === 'lbs' ? 'default' : 'outline'}
+                            onClick={() => setSettings(prev => ({ ...prev, weightUnit: 'lbs' }))}
+                            className={settings.weightUnit === 'lbs' ? 'bg-primary' : ''}
+                        >
+                            Pounds (lbs)
+                        </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        {settings.weightUnit === 'kg' 
+                            ? 'Weight increments: 2.5 kg per adjustment'
+                            : 'Weight increments: 5 lbs per adjustment'}
+                    </p>
+                </CardContent>
+            </Card>
 
             {/* Rest Period Settings */}
             <Card>
@@ -65,8 +165,8 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="number"
-                                    value={settings.heavyRestSeconds}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, heavyRestSeconds: parseInt(e.target.value) || 0 }))}
+                                    value={settings.heavyDayRestSeconds}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, heavyDayRestSeconds: parseInt(e.target.value) || 0 }))}
                                     className="w-24"
                                 />
                                 <span className="text-sm text-muted-foreground">seconds</span>
@@ -81,8 +181,8 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="number"
-                                    value={settings.lightRestSeconds}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, lightRestSeconds: parseInt(e.target.value) || 0 }))}
+                                    value={settings.lightDayRestSeconds}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, lightDayRestSeconds: parseInt(e.target.value) || 0 }))}
                                     className="w-24"
                                 />
                                 <span className="text-sm text-muted-foreground">seconds</span>
@@ -97,8 +197,8 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-2">
                                 <Input
                                     type="number"
-                                    value={settings.mediumRestSeconds}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, mediumRestSeconds: parseInt(e.target.value) || 0 }))}
+                                    value={settings.mediumDayRestSeconds}
+                                    onChange={(e) => setSettings(prev => ({ ...prev, mediumDayRestSeconds: parseInt(e.target.value) || 0 }))}
                                     className="w-24"
                                 />
                                 <span className="text-sm text-muted-foreground">seconds</span>
@@ -200,9 +300,13 @@ export default function SettingsPage() {
 
             {/* Save Buttons */}
             <div className="flex gap-2">
-                <Button onClick={handleSave}>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Settings
+                <Button onClick={handleSave} disabled={saving}>
+                    {saving ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                    )}
+                    {saving ? 'Saving...' : 'Save Settings'}
                 </Button>
                 <Button variant="outline" onClick={handleReset}>
                     Reset to Defaults

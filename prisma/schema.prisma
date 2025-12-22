@@ -90,6 +90,7 @@ model Settings {
   heavyDayRestSeconds  Int       @default(120)
   lightDayRestSeconds  Int       @default(60)
   mediumDayRestSeconds Int       @default(120)
+  weightUnit           String    @default("kg") // "kg" or "lbs"
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 }

@@ -1,5 +1,6 @@
 import { WorkoutCard } from '@/components/workout-card'
 import { VolumeTracker } from '@/components/volume-tracker'
+import { ContributionCalendar } from '@/components/contribution-calendar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, TrendingUp, Zap } from 'lucide-react'
@@ -20,6 +21,9 @@ export default async function Home() {
         { name: 'Biceps', sets: 0, target: 9 },
         { name: 'Triceps', sets: 0, target: 9 },
     ]
+    
+    // Workout history for contribution calendar
+    let workoutHistory: { date: string; dayType: 'heavy' | 'light' | 'medium'; completed: boolean }[] = []
 
     if (session?.user?.id) {
         settings = await prisma.settings.findUnique({
@@ -31,25 +35,39 @@ export default async function Home() {
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
         startOfWeek.setHours(0, 0, 0, 0)
 
-        const workouts = await prisma.workout.findMany({
+        // Get workouts for the past 12 weeks for the contribution calendar
+        const twelveWeeksAgo = new Date()
+        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84)
+        twelveWeeksAgo.setHours(0, 0, 0, 0)
+
+        const allWorkouts = await prisma.workout.findMany({
             where: {
                 userId: session.user.id,
-                date: { gte: startOfWeek }
+                date: { gte: twelveWeeksAgo }
             },
             include: {
                 workoutSets: {
                     where: { completed: true }
                 }
-            }
+            },
+            orderBy: { date: 'desc' }
         })
 
+        // Filter for this week's workouts
+        const workouts = allWorkouts.filter(w => w.date >= startOfWeek)
+
         // Calculate weekly volume
-        const totalSets = workouts.reduce((acc: number, w: { workoutSets: unknown[] }) => acc + w.workoutSets.length, 0)
-        // Update sets per day completed (3 sets per muscle per workout day)
-        const completedDays = workouts.filter((w: { completed: boolean }) => w.completed).length
+        const completedDays = workouts.filter(w => w.completed).length
         weeklyVolume = weeklyVolume.map(v => ({
             ...v,
             sets: completedDays * 3
+        }))
+
+        // Transform for contribution calendar
+        workoutHistory = allWorkouts.map(w => ({
+            date: w.date.toISOString().split('T')[0],
+            dayType: w.dayType as 'heavy' | 'light' | 'medium',
+            completed: w.completed,
         }))
     }
 
@@ -143,6 +161,9 @@ export default async function Home() {
                     <WorkoutCard dayType="medium" isToday lastWorkoutDate="Dec 19, 2024" />
                 </div>
             </div>
+
+            {/* Contribution Calendar */}
+            <ContributionCalendar workouts={workoutHistory} weeks={12} />
 
             {/* Volume Tracker */}
             <VolumeTracker muscleGroups={weeklyVolume} />
