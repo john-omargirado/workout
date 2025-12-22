@@ -235,7 +235,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                     </div>
 
                     {/* Stats row - compact grid */}
-                    <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-6">
                         <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
                             <p className="text-xl sm:text-2xl font-bold text-white">{dayInfo.reps}</p>
                             <p className="text-[10px] sm:text-xs text-white/70">Reps</p>
@@ -247,6 +247,10 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                         <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
                             <p className="text-xl sm:text-2xl font-bold text-white">{workout.length}</p>
                             <p className="text-[10px] sm:text-xs text-white/70">Exercises</p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
+                            <p className="text-xl sm:text-2xl font-bold text-white uppercase">{weightUnit}</p>
+                            <p className="text-[10px] sm:text-xs text-white/70">Unit</p>
                         </div>
                     </div>
                 </div>
