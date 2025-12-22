@@ -33,6 +33,14 @@ const dayTypeColors = {
     },
 }
 
+// Helper to format date as YYYY-MM-DD in local timezone
+const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
+
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
     const calendarData = useMemo(() => {
         const today = new Date()
@@ -41,6 +49,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         // Create a map of workouts by date for quick lookup
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach(w => {
+            // Normalize the workout date to local date string
             workoutMap.set(w.date, w)
         })
 
@@ -61,7 +70,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
 
         // Generate all days from start to today
         while (currentDate <= today) {
-            const dateStr = currentDate.toISOString().split('T')[0]
+            const dateStr = formatLocalDate(currentDate)
             days.push({
                 date: new Date(currentDate),
                 workout: workoutMap.get(dateStr),
