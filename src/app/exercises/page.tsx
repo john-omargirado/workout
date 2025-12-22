@@ -1,7 +1,36 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { muscleGroups, defaultExercises } from '@/lib/exercises'
+import { muscleGroups, defaultExercises, Exercise } from '@/lib/exercises'
 import { Dumbbell } from 'lucide-react'
+import Image from 'next/image'
+
+function ExerciseCard({ exercise, variant }: { exercise: Exercise; variant: 'compound' | 'isolation' }) {
+    return (
+        <div className={`group relative rounded-lg border bg-card p-3 transition-all hover:shadow-md ${
+            variant === 'compound' ? 'border-red-200 hover:border-red-300' : 'border-green-200 hover:border-green-300'
+        }`}>
+            <div className="flex items-start gap-3">
+                {exercise.image && (
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+                        <Image
+                            src={exercise.image}
+                            alt={exercise.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                        />
+                    </div>
+                )}
+                <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-sm truncate">{exercise.name}</h5>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {variant === 'compound' ? 'Heavy & Medium Days' : 'Light Days'}
+                    </p>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export default function ExercisesPage() {
     return (
@@ -29,38 +58,42 @@ export default function ExercisesPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-6">
                                     {/* Compound Exercises */}
                                     {exercises.compound.length > 0 && (
                                         <div>
-                                            <h4 className="font-medium mb-2 flex items-center gap-2">
+                                            <h4 className="font-medium mb-3 flex items-center gap-2">
                                                 <Badge variant="heavy">Compound</Badge>
                                                 <span className="text-xs text-muted-foreground">Heavy & Medium Days</span>
                                             </h4>
-                                            <ul className="space-y-1">
+                                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                                 {exercises.compound.map((exercise) => (
-                                                    <li key={exercise} className="text-sm text-muted-foreground pl-2 border-l-2 border-red-200">
-                                                        {exercise}
-                                                    </li>
+                                                    <ExerciseCard 
+                                                        key={exercise.name} 
+                                                        exercise={exercise} 
+                                                        variant="compound" 
+                                                    />
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                     )}
 
                                     {/* Isolation Exercises */}
                                     {exercises.isolation.length > 0 && (
                                         <div>
-                                            <h4 className="font-medium mb-2 flex items-center gap-2">
+                                            <h4 className="font-medium mb-3 flex items-center gap-2">
                                                 <Badge variant="light">Isolation</Badge>
                                                 <span className="text-xs text-muted-foreground">Light Days</span>
                                             </h4>
-                                            <ul className="space-y-1">
+                                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                                 {exercises.isolation.map((exercise) => (
-                                                    <li key={exercise} className="text-sm text-muted-foreground pl-2 border-l-2 border-green-200">
-                                                        {exercise}
-                                                    </li>
+                                                    <ExerciseCard 
+                                                        key={exercise.name} 
+                                                        exercise={exercise} 
+                                                        variant="isolation" 
+                                                    />
                                                 ))}
-                                            </ul>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

@@ -1,109 +1,115 @@
+// Exercise with image reference
+export interface Exercise {
+    name: string
+    image?: string // URL to exercise demonstration image/gif
+}
+
 // Default exercises organized by muscle group and type
 export const defaultExercises = {
     chest: {
         compound: [
-            'Bench Press',
-            'Incline Bench Press',
-            'DB Bench Press',
-            'DB Incline Bench Press',
-            'Hammer Strength Chest Press',
-            'Machine Chest Press',
-            'Weighted Dips',
-            'Push Ups'
+            { name: 'Bench Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif' },
+            { name: 'Incline Bench Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Barbell-Bench-Press.gif' },
+            { name: 'DB Bench Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Press.gif' },
+            { name: 'DB Incline Bench Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Dumbbell-Press.gif' },
+            { name: 'Hammer Strength Chest Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lever-Chest-Press.gif' },
+            { name: 'Machine Chest Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lever-Chest-Press.gif' },
+            { name: 'Weighted Dips', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Chest-Dips.gif' },
+            { name: 'Push Ups', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif' }
         ],
         isolation: [
-            'Pec Dec',
-            'Cable Crossover',
-            'DB Flyes',
-            'Incline DB Flyes',
-            'Cable Flyes'
+            { name: 'Pec Dec', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif' },
+            { name: 'Cable Crossover', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crossover.gif' },
+            { name: 'DB Flyes', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Fly.gif' },
+            { name: 'Incline DB Flyes', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-dumbbell-Fly.gif' },
+            { name: 'Cable Flyes', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Crossover.gif' }
         ]
     },
     upperBack: {
         compound: [
-            'Pull Ups',
-            'Barbell Rows',
-            'DB Rows',
-            'T-Bar Rows',
-            'Hammer Strength DY Row',
-            'Seated Cable Rows',
-            'Lat Pulldowns'
+            { name: 'Pull Ups', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif' },
+            { name: 'Barbell Rows', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bent-Over-Row.gif' },
+            { name: 'DB Rows', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Row.gif' },
+            { name: 'T-Bar Rows', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/T-Bar-Row.gif' },
+            { name: 'Hammer Strength DY Row', image: 'https://fitnessprogramer.com/wp-content/uploads/2022/02/Lever-High-Row.gif' },
+            { name: 'Seated Cable Rows', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Cable-Row.gif' },
+            { name: 'Lat Pulldowns', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lat-Pulldown.gif' }
         ],
         isolation: [
-            'Pullover',
-            'DB Pullover',
-            'Straight Arm Pulldowns',
-            'Face Pulls'
+            { name: 'Pullover', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Pullover.gif' },
+            { name: 'DB Pullover', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/dumbbell-pullover.gif' },
+            { name: 'Straight Arm Pulldowns', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Straight-Arm-Pulldown.gif' },
+            { name: 'Face Pulls', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif' }
         ]
     },
     shoulders: {
         compound: [
-            'Overhead Press',
-            'Seated Press',
-            'DB Seated Press',
-            'Machine Shoulder Press',
-            'Arnold Press'
+            { name: 'Overhead Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Overhead-Press.gif' },
+            { name: 'Seated Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Seated-Overhead-Press.gif' },
+            { name: 'DB Seated Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif' },
+            { name: 'Machine Shoulder Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lever-Shoulder-Press.gif' },
+            { name: 'Arnold Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Arnold-Press.gif' }
         ],
         isolation: [
-            'DB Laterals',
-            'Cable Laterals',
-            'Rear Delt Flyes',
-            'Face Pulls',
-            'Front Raises'
+            { name: 'DB Laterals', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif' },
+            { name: 'Cable Laterals', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif' },
+            { name: 'Rear Delt Flyes', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Rear-Delt-Fly.gif' },
+            { name: 'Face Pulls', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif' },
+            { name: 'Front Raises', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Front-Raise.gif' }
         ]
     },
     quads: {
         compound: [
-            'Squats',
-            'Leg Press',
-            'Hack Squat',
-            'Front Squat',
-            'Bulgarian Split Squat',
-            'Lunges'
+            { name: 'Squats', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif' },
+            { name: 'Leg Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Leg-Press.gif' },
+            { name: 'Hack Squat', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hack-Squat.gif' },
+            { name: 'Front Squat', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Front-Squat.gif' },
+            { name: 'Bulgarian Split Squat', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Bulgarian-Split-Squat.gif' },
+            { name: 'Lunges', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif' }
         ],
         isolation: [
-            'Leg Extensions',
-            'Sissy Squats'
+            { name: 'Leg Extensions', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/LEG-EXTENSION.gif' },
+            { name: 'Sissy Squats', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Sissy-Squat.gif' }
         ]
     },
     hamstrings: {
         compound: [
-            'Romanian Deadlift',
-            'Stiff Leg Deadlift',
-            'DB RDL',
-            'Glute Bridge',
-            'Hip Thrust'
+            { name: 'Romanian Deadlift', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Romanian-Deadlift.gif' },
+            { name: 'Stiff Leg Deadlift', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Stiff-Leg-Deadlift.gif' },
+            { name: 'DB RDL', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Romanian-Deadlift.gif' },
+            { name: 'Glute Bridge', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge.gif' },
+            { name: 'Hip Thrust', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif' }
         ],
         isolation: [
-            'Leg Curls',
-            'Seated Leg Curls',
-            'Nordic Leg Curls'
+            { name: 'Leg Curls', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Curl.gif' },
+            { name: 'Seated Leg Curls', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Leg-Curl.gif' },
+            { name: 'Nordic Leg Curls', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Nordic-Hamstring-Curl.gif' }
         ]
     },
     biceps: {
-        compound: [],
+        compound: [] as Exercise[],
         isolation: [
-            'Barbell Curl',
-            'DB Curl',
-            'Cable Curl',
-            'Machine Preacher Curl',
-            'Hammer Curl',
-            'Incline DB Curl',
-            'Concentration Curl'
+            { name: 'Barbell Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif' },
+            { name: 'DB Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Curl.gif' },
+            { name: 'Cable Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Curl.gif' },
+            { name: 'Machine Preacher Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Lever-Preacher-Curl.gif' },
+            { name: 'Hammer Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif' },
+            { name: 'Incline DB Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Dumbbell-Curl.gif' },
+            { name: 'Concentration Curl', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif' }
         ]
     },
     triceps: {
         compound: [
-            'Close Grip Bench Press',
-            'Weighted Dips',
-            'Smith CGBP'
+            { name: 'Close Grip Bench Press', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Bench-Press.gif' },
+            { name: 'Weighted Dips', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Triceps-Dips.gif' },
+            { name: 'Smith CGBP', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Smith-Machine-Close-grip-Bench-Press.gif' }
         ],
         isolation: [
-            'Pushdowns',
-            'Overhead Tricep Extension',
-            'DB Overhead Extension',
-            'Skull Crushers',
-            'Cable Kickbacks'
+            { name: 'Pushdowns', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Pushdown.gif' },
+            { name: 'Overhead Tricep Extension', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Overhead-Triceps-Extension.gif' },
+            { name: 'DB Overhead Extension', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Overhead-Triceps-Extension.gif' },
+            { name: 'Skull Crushers', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Skull-Crusher.gif' },
+            { name: 'Cable Kickbacks', image: 'https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Triceps-Kickback.gif' }
         ]
     }
 }
@@ -117,6 +123,24 @@ export const muscleGroups = [
     { id: 'biceps', name: 'Biceps' },
     { id: 'triceps', name: 'Triceps' }
 ]
+
+// Helper to get all exercise names for a muscle group
+export function getExerciseNames(muscleId: keyof typeof defaultExercises): string[] {
+    const exercises = defaultExercises[muscleId]
+    return [
+        ...exercises.compound.map(e => e.name),
+        ...exercises.isolation.map(e => e.name)
+    ]
+}
+
+// Helper to find an exercise by name
+export function findExercise(name: string): Exercise | undefined {
+    for (const muscleGroup of Object.values(defaultExercises)) {
+        const found = [...muscleGroup.compound, ...muscleGroup.isolation].find(e => e.name === name)
+        if (found) return found
+    }
+    return undefined
+}
 
 // The Wizard program templates - Heavy/Light/Medium day structure
 export const workoutTemplates = {
