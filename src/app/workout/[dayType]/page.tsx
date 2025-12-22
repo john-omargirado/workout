@@ -1,16 +1,15 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { SetLogger } from '@/components/set-logger'
 import { RestTimer } from '@/components/rest-timer'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { getDayTypeInfo } from '@/lib/utils'
 import { workoutTemplates } from '@/lib/exercises'
-import { ArrowLeft, Check, Dumbbell } from 'lucide-react'
+import { ArrowLeft, Check, Dumbbell, Timer, Target, Flame, Trophy, ChevronDown, ChevronUp, Zap } from 'lucide-react'
 
 interface WorkoutPageProps {
     params: { dayType: string }
@@ -23,6 +22,36 @@ interface SetData {
     reps: number
 }
 
+const dayTypeStyles = {
+    heavy: {
+        gradient: 'from-red-500 to-rose-600',
+        bgLight: 'bg-red-50 dark:bg-red-950/30',
+        border: 'border-red-200 dark:border-red-800',
+        text: 'text-red-600 dark:text-red-400',
+        ring: 'ring-red-500/20',
+        icon: Flame,
+        accent: 'bg-red-500',
+    },
+    light: {
+        gradient: 'from-green-500 to-emerald-600',
+        bgLight: 'bg-green-50 dark:bg-green-950/30',
+        border: 'border-green-200 dark:border-green-800',
+        text: 'text-green-600 dark:text-green-400',
+        ring: 'ring-green-500/20',
+        icon: Zap,
+        accent: 'bg-green-500',
+    },
+    medium: {
+        gradient: 'from-yellow-400 to-amber-500',
+        bgLight: 'bg-yellow-50 dark:bg-yellow-950/30',
+        border: 'border-yellow-200 dark:border-yellow-800',
+        text: 'text-yellow-600 dark:text-yellow-400',
+        ring: 'ring-yellow-500/20',
+        icon: Target,
+        accent: 'bg-yellow-500',
+    },
+}
+
 export default function WorkoutPage({ params }: WorkoutPageProps) {
     const { dayType } = params
     const validDayTypes = ['heavy', 'light', 'medium']
@@ -30,14 +59,29 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
 
     const dayInfo = getDayTypeInfo(normalizedDayType)
     const workout = workoutTemplates[normalizedDayType]
+    const styles = dayTypeStyles[normalizedDayType]
+    const DayIcon = styles.icon
 
     const [completedSets, setCompletedSets] = useState<SetData[]>([])
     const [showTimer, setShowTimer] = useState(false)
     const [workoutComplete, setWorkoutComplete] = useState(false)
+    const [expandedExercise, setExpandedExercise] = useState<number | null>(0)
 
-    const totalSets = workout.length * 3 // 3 sets per exercise
+    const totalSets = workout.length * 3
     const completedCount = completedSets.length
     const progressPercent = (completedCount / totalSets) * 100
+
+    // Group exercises by muscle
+    const groupedExercises = useMemo(() => {
+        const groups: { [key: string]: typeof workout } = {}
+        workout.forEach((exercise, idx) => {
+            if (!groups[exercise.muscle]) {
+                groups[exercise.muscle] = []
+            }
+            groups[exercise.muscle].push({ ...exercise, originalIndex: idx } as typeof exercise & { originalIndex: number })
+        })
+        return groups
+    }, [workout])
 
     const handleSetComplete = (exerciseIndex: number, setNumber: number, weight: number, reps: number) => {
         setCompletedSets(prev => [...prev, { exerciseIndex, setNumber, weight, reps }])
@@ -45,11 +89,16 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
 
         if (completedCount + 1 === totalSets) {
             setWorkoutComplete(true)
+            setShowTimer(false)
         }
     }
 
     const isSetCompleted = (exerciseIndex: number, setNumber: number) => {
         return completedSets.some(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
+    }
+
+    const getExerciseProgress = (exerciseIndex: number) => {
+        return completedSets.filter(s => s.exerciseIndex === exerciseIndex).length
     }
 
     const variantMap = {
@@ -59,61 +108,101 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                </Link>
-                <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-bold">
-                            {normalizedDayType.charAt(0).toUpperCase() + normalizedDayType.slice(1)} Day Workout
-                        </h1>
-                        <Badge variant={variantMap[normalizedDayType]}>{dayInfo.type}</Badge>
+        <div className="min-h-screen pb-20">
+            {/* Hero Header */}
+            <div className={`bg-gradient-to-br ${styles.gradient} -mx-4 -mt-4 px-4 pt-4 pb-8 mb-6 relative overflow-hidden`}>
+                {/* Background decoration */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+                </div>
+
+                <div className="relative z-10">
+                    {/* Back button */}
+                    <Link href="/">
+                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 mb-4">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
+
+                    {/* Title */}
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                            <DayIcon className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                {normalizedDayType.charAt(0).toUpperCase() + normalizedDayType.slice(1)} Day
+                            </h1>
+                            <p className="text-white/80 text-sm">{dayInfo.description}</p>
+                        </div>
                     </div>
-                    <p className="text-muted-foreground">{dayInfo.description}</p>
+
+                    {/* Stats row - compact grid */}
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6">
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
+                            <p className="text-xl sm:text-2xl font-bold text-white">{dayInfo.reps}</p>
+                            <p className="text-[10px] sm:text-xs text-white/70">Reps</p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
+                            <p className="text-xl sm:text-2xl font-bold text-white">{dayInfo.rest / 60}m</p>
+                            <p className="text-[10px] sm:text-xs text-white/70">Rest</p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
+                            <p className="text-xl sm:text-2xl font-bold text-white">{workout.length}</p>
+                            <p className="text-[10px] sm:text-xs text-white/70">Exercises</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Progress Bar */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="font-medium">Workout Progress</span>
-                            <span className="text-muted-foreground">{completedCount} / {totalSets} sets</span>
+            {/* Progress Card - Compact */}
+            <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight} animate-in`}>
+                <CardContent className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                        <Dumbbell className={`h-5 w-5 ${styles.text} shrink-0`} />
+                        <div className="flex-1 min-w-0">
+                            <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${styles.gradient} rounded-full transition-all duration-500 ease-out`}
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
                         </div>
-                        <Progress value={progressPercent} />
+                        <Badge variant={variantMap[normalizedDayType]} className="text-xs shrink-0">
+                            {completedCount}/{totalSets}
+                        </Badge>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Workout Complete Card */}
             {workoutComplete && (
-                <Card className="border-green-500 bg-green-50 dark:bg-green-950">
+                <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 mb-6 animate-scale-in">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
-                                <Check className="h-6 w-6 text-white" />
+                            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center animate-check shadow-lg shadow-green-500/30">
+                                <Trophy className="h-8 w-8 text-white" />
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-green-700 dark:text-green-300">
-                                    Workout Complete! 💪
+                                    Workout Complete! 💪🔥
                                 </h2>
                                 <p className="text-green-600 dark:text-green-400">
-                                    Great job finishing your {normalizedDayType} day workout!
+                                    Amazing work on your {normalizedDayType} day!
                                 </p>
                             </div>
                         </div>
-                        <div className="mt-4 flex gap-2">
-                            <Link href="/">
-                                <Button>Back to Dashboard</Button>
+                        <div className="mt-6 flex gap-3">
+                            <Link href="/" className="flex-1">
+                                <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+                                    Back to Dashboard
+                                </Button>
                             </Link>
-                            <Link href="/history">
-                                <Button variant="outline">View History</Button>
+                            <Link href="/history" className="flex-1">
+                                <Button variant="outline" className="w-full border-green-500 text-green-600 hover:bg-green-50">
+                                    View History
+                                </Button>
                             </Link>
                         </div>
                     </CardContent>
@@ -122,65 +211,94 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
 
             {/* Rest Timer */}
             {showTimer && !workoutComplete && (
-                <div className="sticky top-4 z-10">
+                <div className="sticky top-4 z-10 mb-6">
                     <RestTimer
                         initialSeconds={dayInfo.rest}
                         onComplete={() => setShowTimer(false)}
+                        dayType={normalizedDayType}
                     />
                 </div>
             )}
 
-            {/* Workout Info */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Dumbbell className="h-5 w-5" />
-                        Workout Details
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                        <div>
-                            <p className="text-2xl font-bold">{dayInfo.reps}</p>
-                            <p className="text-sm text-muted-foreground">Rep Range</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{dayInfo.rest / 60} min</p>
-                            <p className="text-sm text-muted-foreground">Rest Period</p>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{workout.length}</p>
-                            <p className="text-sm text-muted-foreground">Exercises</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Exercises - Responsive Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {workout.map((exercise, exerciseIndex) => {
+                    const exerciseProgress = getExerciseProgress(exerciseIndex)
+                    const isExpanded = expandedExercise === exerciseIndex
+                    const isComplete = exerciseProgress === 3
 
-            {/* Exercises */}
-            <div className="space-y-6">
-                {workout.map((exercise, exerciseIndex) => (
-                    <div key={exerciseIndex} className="space-y-3">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
-                                {exerciseIndex + 1}
-                            </span>
-                            {exercise.exercise}
-                        </h3>
-                        <div className="space-y-2">
-                            {[1, 2, 3].map((setNumber) => (
-                                <SetLogger
-                                    key={`${exerciseIndex}-${setNumber}`}
-                                    exerciseName={exercise.exercise}
-                                    muscleGroup={exercise.muscle}
-                                    setNumber={setNumber}
-                                    targetReps={exercise.reps}
-                                    onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
-                                    isCompleted={isSetCompleted(exerciseIndex, setNumber)}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                    return (
+                        <Card
+                            key={exerciseIndex}
+                            className={`transition-all duration-300 overflow-hidden ${isComplete
+                                ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
+                                : styles.border
+                                } ${isExpanded ? 'ring-2 ' + styles.ring + ' lg:col-span-2' : ''}`}
+                        >
+                            {/* Exercise Header - Compact */}
+                            <CardHeader
+                                className={`cursor-pointer transition-colors py-3 px-4 ${isExpanded ? styles.bgLight : 'hover:bg-muted/50'}`}
+                                onClick={() => setExpandedExercise(isExpanded ? null : exerciseIndex)}
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0
+                                            ${isComplete ? 'bg-gradient-to-br from-green-500 to-emerald-600' : `bg-gradient-to-br ${styles.gradient}`}`}>
+                                            {isComplete ? <Check className="h-4 w-4" /> : exerciseIndex + 1}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <CardTitle className="text-sm truncate">{exercise.exercise}</CardTitle>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                    {exercise.muscle}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {/* Mini progress bar */}
+                                        <div className="flex gap-0.5">
+                                            {[1, 2, 3].map((set) => (
+                                                <div
+                                                    key={set}
+                                                    className={`h-1.5 w-4 rounded-sm transition-colors ${isSetCompleted(exerciseIndex, set)
+                                                        ? 'bg-green-500'
+                                                        : 'bg-muted'
+                                                        }`}
+                                                />
+                                            ))}
+                                        </div>
+                                        {isExpanded ? (
+                                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                    </div>
+                                </div>
+                            </CardHeader>
+
+                            {/* Sets - Expandable with compact spacing */}
+                            {isExpanded && (
+                                <CardContent className="pt-0 pb-3 px-3 animate-in">
+                                    <div className="space-y-2">
+                                        {[1, 2, 3].map((setNumber) => (
+                                            <SetLogger
+                                                key={`${exerciseIndex}-${setNumber}`}
+                                                exerciseName={exercise.exercise}
+                                                muscleGroup={exercise.muscle}
+                                                setNumber={setNumber}
+                                                targetReps={exercise.reps}
+                                                onComplete={(weight, reps) => handleSetComplete(exerciseIndex, setNumber, weight, reps)}
+                                                isCompleted={isSetCompleted(exerciseIndex, setNumber)}
+                                                dayType={normalizedDayType}
+                                            />
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            )}
+                        </Card>
+                    )
+                })}
             </div>
         </div>
     )

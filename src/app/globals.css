@@ -33,6 +33,14 @@
         --ring: 222.2 84% 4.9%;
 
         --radius: 0.5rem;
+
+        /* Workout day colors */
+        --heavy: 0 84% 60%;
+        --heavy-foreground: 0 0% 100%;
+        --light: 142 76% 36%;
+        --light-foreground: 0 0% 100%;
+        --medium: 45 93% 47%;
+        --medium-foreground: 0 0% 0%;
     }
 
     .dark {
@@ -63,6 +71,14 @@
         --border: 217.2 32.6% 17.5%;
         --input: 217.2 32.6% 17.5%;
         --ring: 212.7 26.8% 83.9%;
+
+        /* Workout day colors - dark mode */
+        --heavy: 0 72% 51%;
+        --heavy-foreground: 0 0% 100%;
+        --light: 142 71% 45%;
+        --light-foreground: 0 0% 100%;
+        --medium: 45 93% 47%;
+        --medium-foreground: 0 0% 0%;
     }
 }
 
@@ -73,5 +89,90 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    /* Smooth animations */
+    .animate-in {
+        animation: animate-in 0.3s ease-out;
+    }
+
+    @keyframes animate-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-pulse-soft {
+        animation: pulse-soft 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-soft {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .animate-scale-in {
+        animation: scale-in 0.2s ease-out;
+    }
+
+    @keyframes scale-in {
+        from {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .animate-check {
+        animation: check-bounce 0.4s ease-out;
+    }
+
+    @keyframes check-bounce {
+        0% {
+            transform: scale(0);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Gradient backgrounds */
+    .gradient-heavy {
+        @apply bg-gradient-to-br from-red-500 to-rose-600;
+    }
+
+    .gradient-light {
+        @apply bg-gradient-to-br from-green-500 to-emerald-600;
+    }
+
+    .gradient-medium {
+        @apply bg-gradient-to-br from-yellow-400 to-amber-500;
+    }
+
+    /* Glass effect */
+    .glass {
+        @apply backdrop-blur-md bg-white/80 dark:bg-gray-900/80;
+    }
+
+    /* Progress bar animations */
+    .progress-animated {
+        transition: width 0.5s ease-out;
     }
 }
