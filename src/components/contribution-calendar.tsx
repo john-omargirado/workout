@@ -33,19 +33,19 @@ const dayTypeColors = {
     },
 }
 
-// Helper to format date as YYYY-MM-DD in UTC (consistent with server)
-const formatDateUTC = (date: Date): string => {
-    const year = date.getUTCFullYear()
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(date.getUTCDate()).padStart(2, '0')
+
+// Helper to format date as YYYY-MM-DD in local time (for client display)
+const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
 }
 
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
     const calendarData = useMemo(() => {
         const today = new Date()
-        // Use UTC hours to avoid timezone issues when comparing with UTC-formatted dates
-        today.setUTCHours(0, 0, 0, 0)
+        today.setHours(0, 0, 0, 0) // Use local time
 
         // Create a map of workouts by date for quick lookup
         // Only keep completed workouts, or don't overwrite if already completed
@@ -58,31 +58,31 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
             }
         })
 
-        // Find the start of the current week (Sunday) - use UTC day
+        // Find the start of the current week (Sunday) - use local day
         const endOfCalendar = new Date(today)
-        const currentDayOfWeek = today.getUTCDay() // 0 = Sunday, 6 = Saturday
+        const currentDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
 
         // Go back to get the start date (N weeks ago, starting from a Sunday)
         const startOfCalendar = new Date(today)
-        startOfCalendar.setUTCDate(today.getUTCDate() - (weeks * 7) + (7 - currentDayOfWeek))
+        startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
 
         // Adjust to start on the Sunday of that week
-        const startDayOfWeek = startOfCalendar.getUTCDay()
-        startOfCalendar.setUTCDate(startOfCalendar.getUTCDate() - startDayOfWeek)
+        const startDayOfWeek = startOfCalendar.getDay()
+        startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
 
         const days: { date: Date; workout?: WorkoutDay }[] = []
         const currentDate = new Date(startOfCalendar)
 
         // Generate all days from start to today
         while (currentDate <= today) {
-            const dateStr = formatDateUTC(currentDate)
+            const dateStr = formatDateLocal(currentDate)
             const workout = workoutMap.get(dateStr)
 
             days.push({
                 date: new Date(currentDate),
                 workout: workout,
             })
-            currentDate.setUTCDate(currentDate.getUTCDate() + 1)
+            currentDate.setDate(currentDate.getDate() + 1)
         }
 
         // Add remaining days to complete the current week
@@ -91,7 +91,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 date: new Date(currentDate),
                 workout: undefined,
             })
-            currentDate.setUTCDate(currentDate.getUTCDate() + 1)
+            currentDate.setDate(currentDate.getDate() + 1)
         }
 
         // Group by weeks (7 days each, Sun-Sat)
@@ -107,7 +107,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
     const currentStreak = useMemo(() => {
         let streak = 0
         const today = new Date()
-        today.setUTCHours(0, 0, 0, 0)
+        today.setHours(0, 0, 0, 0) // Use local time
 
         // Sort workouts by date descending
         const sortedWorkouts = [...workouts]
@@ -117,7 +117,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         if (sortedWorkouts.length === 0) return 0
 
         // Check if there's a workout today or yesterday to start the streak
-        const lastWorkoutDate = new Date(sortedWorkouts[0].date + 'T00:00:00Z')
+        const lastWorkoutDate = new Date(sortedWorkouts[0].date + 'T00:00:00') // local time
 
         const daysDiff = Math.floor((today.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24))
         if (daysDiff > 1) return 0 // Streak broken
@@ -127,13 +127,11 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         let checkDate = new Date(lastWorkoutDate)
 
         while (true) {
-            const dateStr = formatDateUTC(checkDate)
+            const dateStr = formatDateLocal(checkDate)
             if (workoutDates.has(dateStr)) {
                 streak++
-                checkDate.setUTCDate(checkDate.getUTCDate() - 1)
+                checkDate.setDate(checkDate.getDate() - 1)
             } else {
-                // Check if it was a rest day (no workout expected)
-                // For simplicity, we'll just break on any missing day
                 break
             }
         }
@@ -224,8 +222,10 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                 {calendarData.map((week, weekIndex) => (
                                     <div key={weekIndex} className="flex flex-col gap-1">
                                         {week.map((day, dayIndex) => {
-                                            const isToday = day.date.toDateString() === new Date().toDateString()
-                                            const isFuture = day.date > new Date()
+                                            const now = new Date()
+                                            now.setHours(0, 0, 0, 0)
+                                            const isToday = day.date.toDateString() === now.toDateString()
+                                            const isFuture = day.date > now
                                             const hasWorkout = day.workout?.completed
 
                                             return (
