@@ -28,6 +28,28 @@ export default async function Home() {
     // Workout history for contribution calendar
     let workoutHistory: { date: string; dayType: 'heavy' | 'light' | 'medium'; completed: boolean }[] = []
 
+    // Last completed workout dates by day type
+    let lastHeavyDate: string | undefined
+    let lastLightDate: string | undefined
+    let lastMediumDate: string | undefined
+
+    // Helper to format date as YYYY-MM-DD in local timezone
+    const formatLocalDate = (date: Date): string => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+    }
+
+    // Helper to format date for display (e.g., "Dec 22, 2025")
+    const formatDisplayDate = (date: Date): string => {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        })
+    }
+
     if (session?.user?.id) {
         settings = await prisma.settings.findUnique({
             where: { userId: session.user.id }
@@ -66,20 +88,22 @@ export default async function Home() {
             sets: completedDays * 3
         }))
 
-        // Helper to format date as YYYY-MM-DD in local timezone
-        const formatLocalDate = (date: Date): string => {
-            const year = date.getFullYear()
-            const month = String(date.getMonth() + 1).padStart(2, '0')
-            const day = String(date.getDate()).padStart(2, '0')
-            return `${year}-${month}-${day}`
-        }
-
         // Transform for contribution calendar
         workoutHistory = allWorkouts.map(w => ({
             date: formatLocalDate(w.date),
             dayType: w.dayType as 'heavy' | 'light' | 'medium',
             completed: w.completed,
         }))
+
+        // Find last completed workout for each day type
+        const completedWorkouts = allWorkouts.filter(w => w.completed)
+        const lastHeavy = completedWorkouts.find(w => w.dayType === 'heavy')
+        const lastLight = completedWorkouts.find(w => w.dayType === 'light')
+        const lastMedium = completedWorkouts.find(w => w.dayType === 'medium')
+
+        lastHeavyDate = lastHeavy ? formatDisplayDate(lastHeavy.date) : undefined
+        lastLightDate = lastLight ? formatDisplayDate(lastLight.date) : undefined
+        lastMediumDate = lastMedium ? formatDisplayDate(lastMedium.date) : undefined
     }
 
     const currentWeek = settings?.currentWeek || 1
@@ -167,9 +191,9 @@ export default async function Home() {
             <div className="space-y-4">
                 <h2 className="text-2xl font-bold">Start a Workout</h2>
                 <div className="grid gap-4 md:grid-cols-3">
-                    <WorkoutCard dayType="heavy" lastWorkoutDate="Dec 15, 2024" />
-                    <WorkoutCard dayType="light" lastWorkoutDate="Dec 17, 2024" />
-                    <WorkoutCard dayType="medium" isToday lastWorkoutDate="Dec 19, 2024" />
+                    <WorkoutCard dayType="heavy" lastWorkoutDate={lastHeavyDate} />
+                    <WorkoutCard dayType="light" lastWorkoutDate={lastLightDate} />
+                    <WorkoutCard dayType="medium" lastWorkoutDate={lastMediumDate} />
                 </div>
             </div>
 
