@@ -44,26 +44,26 @@ const formatDateUTC = (date: Date): string => {
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
     const calendarData = useMemo(() => {
         const today = new Date()
-        today.setHours(0, 0, 0, 0)
+        // Use UTC hours to avoid timezone issues when comparing with UTC-formatted dates
+        today.setUTCHours(0, 0, 0, 0)
 
         // Create a map of workouts by date for quick lookup
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach(w => {
-            // Normalize the workout date to local date string
             workoutMap.set(w.date, w)
         })
 
-        // Find the start of the current week (Sunday)
+        // Find the start of the current week (Sunday) - use UTC day
         const endOfCalendar = new Date(today)
-        const currentDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
+        const currentDayOfWeek = today.getUTCDay() // 0 = Sunday, 6 = Saturday
 
         // Go back to get the start date (N weeks ago, starting from a Sunday)
         const startOfCalendar = new Date(today)
-        startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
+        startOfCalendar.setUTCDate(today.getUTCDate() - (weeks * 7) + (7 - currentDayOfWeek))
 
         // Adjust to start on the Sunday of that week
-        const startDayOfWeek = startOfCalendar.getDay()
-        startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
+        const startDayOfWeek = startOfCalendar.getUTCDay()
+        startOfCalendar.setUTCDate(startOfCalendar.getUTCDate() - startDayOfWeek)
 
         const days: { date: Date; workout?: WorkoutDay }[] = []
         const currentDate = new Date(startOfCalendar)
@@ -75,7 +75,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 date: new Date(currentDate),
                 workout: workoutMap.get(dateStr),
             })
-            currentDate.setDate(currentDate.getDate() + 1)
+            currentDate.setUTCDate(currentDate.getUTCDate() + 1)
         }
 
         // Add remaining days to complete the current week
@@ -84,7 +84,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                 date: new Date(currentDate),
                 workout: undefined,
             })
-            currentDate.setDate(currentDate.getDate() + 1)
+            currentDate.setUTCDate(currentDate.getUTCDate() + 1)
         }
 
         // Group by weeks (7 days each, Sun-Sat)
@@ -100,7 +100,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
     const currentStreak = useMemo(() => {
         let streak = 0
         const today = new Date()
-        today.setHours(0, 0, 0, 0)
+        today.setUTCHours(0, 0, 0, 0)
 
         // Sort workouts by date descending
         const sortedWorkouts = [...workouts]
@@ -110,8 +110,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         if (sortedWorkouts.length === 0) return 0
 
         // Check if there's a workout today or yesterday to start the streak
-        const lastWorkoutDate = new Date(sortedWorkouts[0].date)
-        lastWorkoutDate.setHours(0, 0, 0, 0)
+        const lastWorkoutDate = new Date(sortedWorkouts[0].date + 'T00:00:00Z')
 
         const daysDiff = Math.floor((today.getTime() - lastWorkoutDate.getTime()) / (1000 * 60 * 60 * 24))
         if (daysDiff > 1) return 0 // Streak broken
@@ -121,10 +120,10 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         let checkDate = new Date(lastWorkoutDate)
 
         while (true) {
-            const dateStr = checkDate.toISOString().split('T')[0]
+            const dateStr = formatDateUTC(checkDate)
             if (workoutDates.has(dateStr)) {
                 streak++
-                checkDate.setDate(checkDate.getDate() - 1)
+                checkDate.setUTCDate(checkDate.getUTCDate() - 1)
             } else {
                 // Check if it was a rest day (no workout expected)
                 // For simplicity, we'll just break on any missing day
