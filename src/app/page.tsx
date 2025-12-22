@@ -35,15 +35,15 @@ export default async function Home() {
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
         startOfWeek.setHours(0, 0, 0, 0)
 
-        // Get workouts for the past 12 weeks for the contribution calendar
-        const twelveWeeksAgo = new Date()
-        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84)
-        twelveWeeksAgo.setHours(0, 0, 0, 0)
+        // Get workouts for the past 20 weeks for the contribution calendar
+        const twentyWeeksAgo = new Date()
+        twentyWeeksAgo.setDate(twentyWeeksAgo.getDate() - 140)
+        twentyWeeksAgo.setHours(0, 0, 0, 0)
 
         const allWorkouts = await prisma.workout.findMany({
             where: {
                 userId: session.user.id,
-                date: { gte: twelveWeeksAgo }
+                date: { gte: twentyWeeksAgo }
             },
             include: {
                 workoutSets: {
@@ -163,7 +163,7 @@ export default async function Home() {
             </div>
 
             {/* Contribution Calendar */}
-            <ContributionCalendar workouts={workoutHistory} weeks={12} />
+            <ContributionCalendar workouts={workoutHistory} weeks={20} />
 
             {/* Volume Tracker */}
             <VolumeTracker muscleGroups={weeklyVolume} />
