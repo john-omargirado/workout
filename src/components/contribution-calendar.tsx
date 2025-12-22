@@ -33,11 +33,11 @@ const dayTypeColors = {
     },
 }
 
-// Helper to format date as YYYY-MM-DD in local timezone
-const formatLocalDate = (date: Date): string => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+// Helper to format date as YYYY-MM-DD in UTC (consistent with server)
+const formatDateUTC = (date: Date): string => {
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
 }
 
@@ -70,7 +70,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
 
         // Generate all days from start to today
         while (currentDate <= today) {
-            const dateStr = formatLocalDate(currentDate)
+            const dateStr = formatDateUTC(currentDate)
             days.push({
                 date: new Date(currentDate),
                 workout: workoutMap.get(dateStr),
