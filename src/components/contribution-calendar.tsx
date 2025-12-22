@@ -36,27 +36,49 @@ const dayTypeColors = {
 export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
     const calendarData = useMemo(() => {
         const today = new Date()
-        const days: { date: Date; workout?: WorkoutDay }[] = []
-
+        today.setHours(0, 0, 0, 0)
+        
         // Create a map of workouts by date for quick lookup
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach(w => {
             workoutMap.set(w.date, w)
         })
 
-        // Generate days for the past N weeks (including today)
-        const totalDays = weeks * 7
-        for (let i = totalDays - 1; i >= 0; i--) {
-            const date = new Date(today)
-            date.setDate(today.getDate() - i)
-            const dateStr = date.toISOString().split('T')[0]
+        // Find the start of the current week (Sunday)
+        const endOfCalendar = new Date(today)
+        const currentDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
+        
+        // Go back to get the start date (N weeks ago, starting from a Sunday)
+        const startOfCalendar = new Date(today)
+        startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
+        
+        // Adjust to start on the Sunday of that week
+        const startDayOfWeek = startOfCalendar.getDay()
+        startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
+
+        const days: { date: Date; workout?: WorkoutDay }[] = []
+        const currentDate = new Date(startOfCalendar)
+        
+        // Generate all days from start to today
+        while (currentDate <= today) {
+            const dateStr = currentDate.toISOString().split('T')[0]
             days.push({
-                date,
+                date: new Date(currentDate),
                 workout: workoutMap.get(dateStr),
             })
+            currentDate.setDate(currentDate.getDate() + 1)
+        }
+        
+        // Add remaining days to complete the current week
+        while (days.length % 7 !== 0) {
+            days.push({
+                date: new Date(currentDate),
+                workout: undefined,
+            })
+            currentDate.setDate(currentDate.getDate() + 1)
         }
 
-        // Group by weeks (7 days each)
+        // Group by weeks (7 days each, Sun-Sat)
         const weekGroups: typeof days[] = []
         for (let i = 0; i < days.length; i += 7) {
             weekGroups.push(days.slice(i, i + 7))
