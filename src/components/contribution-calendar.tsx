@@ -127,11 +127,11 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
     }, [calendarData])
 
     return (
-        <Card>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+        <Card className="overflow-hidden">
+            <CardHeader className="pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
                             <Calendar className="h-5 w-5" />
                             Workout Activity
                         </CardTitle>
@@ -140,23 +140,23 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                         </CardDescription>
                     </div>
                     {currentStreak > 0 && (
-                        <div className="flex items-center gap-1.5 bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 px-3 py-1.5 rounded-full">
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-950/50 dark:to-amber-950/50 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-full shadow-sm border border-orange-200 dark:border-orange-800">
                             <Flame className="h-4 w-4" />
-                            <span className="text-sm font-semibold">{currentStreak} day streak</span>
+                            <span className="text-sm font-bold">{currentStreak} day streak!</span>
                         </div>
                     )}
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
                 {/* Calendar Grid */}
-                <div className="overflow-x-auto pb-2">
-                    <div className="min-w-fit">
+                <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4">
+                    <div className="inline-block min-w-max">
                         {/* Month labels */}
-                        <div className="flex gap-[3px] mb-1 ml-6">
-                            {calendarData.map((_, weekIndex) => {
+                        <div className="flex gap-1 mb-2 ml-8">
+                            {calendarData.map((week, weekIndex) => {
                                 const label = monthLabels.find(l => l.colStart === weekIndex)
                                 return (
-                                    <div key={weekIndex} className="w-[14px] text-[10px] text-muted-foreground">
+                                    <div key={weekIndex} className="w-4 text-[11px] font-medium text-muted-foreground">
                                         {label?.month || ''}
                                     </div>
                                 )
@@ -166,11 +166,11 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                         {/* Day rows */}
                         <div className="flex">
                             {/* Day labels */}
-                            <div className="flex flex-col gap-[3px] mr-1.5">
+                            <div className="flex flex-col gap-1 mr-2">
                                 {dayLabels.map((label, idx) => (
                                     <div
                                         key={idx}
-                                        className="w-4 h-[14px] text-[10px] text-muted-foreground flex items-center justify-end pr-0.5"
+                                        className="w-6 h-4 text-[11px] font-medium text-muted-foreground flex items-center justify-end pr-1"
                                     >
                                         {idx % 2 === 1 ? label : ''}
                                     </div>
@@ -178,9 +178,9 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                             </div>
 
                             {/* Calendar cells */}
-                            <div className="flex gap-[3px]">
+                            <div className="flex gap-1">
                                 {calendarData.map((week, weekIndex) => (
-                                    <div key={weekIndex} className="flex flex-col gap-[3px]">
+                                    <div key={weekIndex} className="flex flex-col gap-1">
                                         {week.map((day, dayIndex) => {
                                             const isToday = day.date.toDateString() === new Date().toDateString()
                                             const isFuture = day.date > new Date()
@@ -189,12 +189,12 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                             return (
                                                 <div
                                                     key={dayIndex}
-                                                    className={`w-[14px] h-[14px] rounded-sm transition-all cursor-pointer
+                                                    className={`w-4 h-4 rounded-[4px] transition-all cursor-pointer
                                                         ${isFuture
-                                                            ? 'bg-muted/30'
+                                                            ? 'bg-muted/20'
                                                             : hasWorkout
-                                                                ? `${dayTypeColors[day.workout!.dayType].bg} ${dayTypeColors[day.workout!.dayType].hover}`
-                                                                : 'bg-muted hover:bg-muted-foreground/20'
+                                                                ? `${dayTypeColors[day.workout!.dayType].bg} ${dayTypeColors[day.workout!.dayType].hover} shadow-sm`
+                                                                : 'bg-muted/60 hover:bg-muted'
                                                         }
                                                         ${isToday ? 'ring-2 ring-offset-1 ring-offset-background ring-primary' : ''}
                                                     `}
@@ -213,29 +213,33 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                     </div>
                 </div>
 
-                {/* Legend */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t">
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>Less</span>
-                        <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-sm bg-muted" />
-                            <div className="w-3 h-3 rounded-sm bg-green-300" />
-                            <div className="w-3 h-3 rounded-sm bg-green-500" />
+                {/* Legend - Responsive */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="font-medium">Activity:</span>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-muted/60" />
+                            <span>None</span>
                         </div>
-                        <span>More</span>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-400" />
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-500" />
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-600" />
+                        </div>
+                        <span>Active</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs">
+                    <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-sm bg-red-500" />
-                            <span className="text-muted-foreground">Heavy</span>
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-red-500 shadow-sm" />
+                            <span className="text-muted-foreground font-medium">Heavy</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-sm bg-green-500" />
-                            <span className="text-muted-foreground">Light</span>
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-green-500 shadow-sm" />
+                            <span className="text-muted-foreground font-medium">Light</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded-sm bg-yellow-500" />
-                            <span className="text-muted-foreground">Medium</span>
+                            <div className="w-3.5 h-3.5 rounded-[3px] bg-yellow-500 shadow-sm" />
+                            <span className="text-muted-foreground font-medium">Medium</span>
                         </div>
                     </div>
                 </div>
