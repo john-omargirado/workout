@@ -67,7 +67,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     const [workoutComplete, setWorkoutComplete] = useState(false)
     const [expandedExercise, setExpandedExercise] = useState<number | null>(0)
     const [workoutId, setWorkoutId] = useState<string | null>(null)
-    const [isCreatingWorkout, setIsCreatingWorkout] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
     const [savingSet, setSavingSet] = useState(false)
     const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
 
@@ -89,14 +89,57 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
         fetchSettings()
     }, [])
 
-    // Create a new workout session when component mounts
+    // Load existing workout or create new one
     useEffect(() => {
-        const createWorkout = async () => {
-            if (workoutId || isCreatingWorkout) return
+        const loadOrCreateWorkout = async () => {
+            if (workoutId) return
 
-            setIsCreatingWorkout(true)
+            setIsLoading(true)
             try {
-                const response = await fetch('/api/workouts', {
+                // First, check for an existing active workout for today
+                const existingResponse = await fetch(`/api/workouts?dayType=${normalizedDayType}&active=true`)
+                
+                if (existingResponse.ok) {
+                    const existingWorkout = await existingResponse.json()
+                    
+                    if (existingWorkout && existingWorkout.id) {
+                        // Found existing workout - load its sets
+                        setWorkoutId(existingWorkout.id)
+                        
+                        if (existingWorkout.completed) {
+                            setWorkoutComplete(true)
+                        }
+                        
+                        // Convert saved sets to our SetData format
+                        if (existingWorkout.workoutSets && existingWorkout.workoutSets.length > 0) {
+                            const loadedSets: SetData[] = existingWorkout.workoutSets.map((set: {
+                                exercise: { name: string }
+                                setNumber: number
+                                weight: number
+                                reps: number
+                            }) => {
+                                // Find the exercise index in our workout template
+                                const exerciseIndex = workout.findIndex(
+                                    ex => ex.exercise === set.exercise.name
+                                )
+                                return {
+                                    exerciseIndex,
+                                    setNumber: set.setNumber,
+                                    weight: set.weight,
+                                    reps: set.reps
+                                }
+                            }).filter((set: SetData) => set.exerciseIndex !== -1)
+                            
+                            setCompletedSets(loadedSets)
+                        }
+                        
+                        setIsLoading(false)
+                        return
+                    }
+                }
+
+                // No existing workout found - create a new one
+                const createResponse = await fetch('/api/workouts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -105,21 +148,21 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                     }),
                 })
 
-                if (response.ok) {
-                    const data = await response.json()
+                if (createResponse.ok) {
+                    const data = await createResponse.json()
                     setWorkoutId(data.id)
                 } else {
                     console.error('Failed to create workout')
                 }
             } catch (error) {
-                console.error('Error creating workout:', error)
+                console.error('Error loading/creating workout:', error)
             } finally {
-                setIsCreatingWorkout(false)
+                setIsLoading(false)
             }
         }
 
-        createWorkout()
-    }, [normalizedDayType, workoutId, isCreatingWorkout])
+        loadOrCreateWorkout()
+    }, [normalizedDayType, workoutId, workout])
 
     const totalSets = workout.length * 3
     const completedCount = completedSets.length
@@ -260,7 +303,20 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                 </div>
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+                <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight}`}>
+                    <CardContent className="py-8">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                            <Loader2 className={`h-8 w-8 ${styles.text} animate-spin`} />
+                            <p className="text-muted-foreground text-sm">Loading workout...</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Progress Card - Compact */}
+            {!isLoading && (
             <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight} animate-in`}>
                 <CardContent className="py-3 px-4">
                     <div className="flex items-center gap-3">
@@ -279,9 +335,10 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                     </div>
                 </CardContent>
             </Card>
+            )}
 
             {/* Workout Complete Card */}
-            {workoutComplete && (
+            {!isLoading && workoutComplete && (
                 <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 mb-6 animate-scale-in">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-4">
@@ -325,6 +382,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
             )}
 
             {/* Exercises - Responsive Grid */}
+            {!isLoading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {workout.map((exercise, exerciseIndex) => {
                     const exerciseProgress = getExerciseProgress(exerciseIndex)
@@ -410,6 +468,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                     )
                 })}
             </div>
+            )}
         </div>
     )
 }
