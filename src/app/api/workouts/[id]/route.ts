@@ -1,14 +1,23 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
 
 export async function GET(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await auth()
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
         const { id } = params
-        const workout = await prisma.workout.findUnique({
-            where: { id },
+        const workout = await prisma.workout.findFirst({
+            where: {
+                id,
+                userId: session.user.id
+            },
             include: {
                 workoutSets: {
                     include: {
@@ -41,8 +50,25 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await auth()
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
         const { id } = params
         const body = await request.json()
+
+        // Verify the workout belongs to the user
+        const existingWorkout = await prisma.workout.findFirst({
+            where: {
+                id,
+                userId: session.user.id,
+            },
+        })
+
+        if (!existingWorkout) {
+            return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+        }
 
         const workout = await prisma.workout.update({
             where: { id },
@@ -61,7 +87,25 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
+        const session = await auth()
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
         const { id } = params
+
+        // Verify the workout belongs to the user
+        const existingWorkout = await prisma.workout.findFirst({
+            where: {
+                id,
+                userId: session.user.id,
+            },
+        })
+
+        if (!existingWorkout) {
+            return NextResponse.json({ error: 'Workout not found' }, { status: 404 })
+        }
+
         await prisma.workout.delete({
             where: { id }
         })

@@ -61,21 +61,118 @@ export function SetLogger({
                 : 'bg-card border-border hover:border-muted-foreground/30'
                 }`}
         >
-            {/* Single row layout - Set info + Inputs + Complete button */}
-            <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-3 items-center">
+            {/* Mobile layout (stacked) */}
+            <div className="flex flex-col gap-3 sm:hidden">
+                {/* Top row: Set indicator + Complete button */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0
+                            ${completed ? 'bg-gradient-to-br from-green-500 to-emerald-600' : `bg-gradient-to-br ${gradient}`}`}>
+                            {completed ? <Check className="h-4 w-4" /> : setNumber}
+                        </div>
+                        <div>
+                            <span className="font-medium text-sm leading-none">Set {setNumber}</span>
+                            <p className="text-xs text-muted-foreground">{targetReps} reps</p>
+                        </div>
+                    </div>
+                    <Button
+                        size="icon"
+                        className={`h-9 w-9 rounded-lg transition-all duration-300 shrink-0 ${completed
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : `bg-gradient-to-br ${gradient} hover:opacity-90`
+                            }`}
+                        onClick={handleComplete}
+                        disabled={completed || (weight === 0 && reps === 0)}
+                    >
+                        <Check className="h-4 w-4 text-white" />
+                    </Button>
+                </div>
+
+                {/* Weight and Reps in a row */}
+                <div className="grid grid-cols-2 gap-2">
+                    {/* Weight Input */}
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg shrink-0"
+                            onClick={() => adjustWeight(-2.5)}
+                            disabled={completed}
+                        >
+                            <Minus className="h-3 w-3" />
+                        </Button>
+                        <div className="relative flex-1 min-w-0">
+                            <Input
+                                type="number"
+                                value={weight || ''}
+                                placeholder="0"
+                                onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
+                                className="text-center h-8 text-sm font-semibold rounded-lg pr-6"
+                                disabled={completed}
+                            />
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">kg</span>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg shrink-0"
+                            onClick={() => adjustWeight(2.5)}
+                            disabled={completed}
+                        >
+                            <Plus className="h-3 w-3" />
+                        </Button>
+                    </div>
+
+                    {/* Reps Input */}
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg shrink-0"
+                            onClick={() => adjustReps(-1)}
+                            disabled={completed}
+                        >
+                            <Minus className="h-3 w-3" />
+                        </Button>
+                        <div className="relative flex-1 min-w-0">
+                            <Input
+                                type="number"
+                                value={reps || ''}
+                                placeholder="0"
+                                onChange={(e) => setReps(parseInt(e.target.value) || 0)}
+                                className="text-center h-8 text-sm font-semibold rounded-lg pr-7"
+                                disabled={completed}
+                            />
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">reps</span>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 rounded-lg shrink-0"
+                            onClick={() => adjustReps(1)}
+                            disabled={completed}
+                        >
+                            <Plus className="h-3 w-3" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop/Tablet layout (single row) */}
+            <div className="hidden sm:grid sm:grid-cols-[auto_1fr_1fr_auto] gap-3 items-center">
                 {/* Set indicator */}
                 <div className="flex items-center gap-2">
                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center text-sm font-bold text-white shrink-0
                         ${completed ? 'bg-gradient-to-br from-green-500 to-emerald-600' : `bg-gradient-to-br ${gradient}`}`}>
                         {completed ? <Check className="h-4 w-4" /> : setNumber}
                     </div>
-                    <div className="hidden sm:block">
+                    <div>
                         <span className="font-medium text-sm leading-none">Set {setNumber}</span>
                         <p className="text-xs text-muted-foreground">{targetReps} reps</p>
                     </div>
                 </div>
 
-                {/* Weight Input - compact */}
+                {/* Weight Input */}
                 <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
@@ -108,7 +205,7 @@ export function SetLogger({
                     </Button>
                 </div>
 
-                {/* Reps Input - compact */}
+                {/* Reps Input */}
                 <div className="flex items-center gap-1">
                     <Button
                         variant="outline"
@@ -153,16 +250,6 @@ export function SetLogger({
                 >
                     <Check className="h-4 w-4 text-white" />
                 </Button>
-            </div>
-
-            {/* Mobile: show set info below on very small screens */}
-            <div className="sm:hidden flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                <span className="text-xs text-muted-foreground">Set {setNumber} • Target: {targetReps}</span>
-                {completed && (
-                    <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-                        <Check className="h-3 w-3" /> Done
-                    </span>
-                )}
             </div>
         </div>
     )

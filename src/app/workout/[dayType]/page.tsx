@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SetLogger } from '@/components/set-logger'
 import { RestTimer } from '@/components/rest-timer'
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getDayTypeInfo } from '@/lib/utils'
 import { workoutTemplates } from '@/lib/exercises'
-import { ArrowLeft, Check, Dumbbell, Timer, Target, Flame, Trophy, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { ArrowLeft, Check, Dumbbell, Timer, Target, Flame, Trophy, ChevronDown, ChevronUp, Zap, Loader2 } from 'lucide-react'
 
 interface WorkoutPageProps {
     params: { dayType: string }
@@ -66,6 +66,41 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     const [showTimer, setShowTimer] = useState(false)
     const [workoutComplete, setWorkoutComplete] = useState(false)
     const [expandedExercise, setExpandedExercise] = useState<number | null>(0)
+    const [workoutId, setWorkoutId] = useState<string | null>(null)
+    const [isCreatingWorkout, setIsCreatingWorkout] = useState(false)
+    const [savingSet, setSavingSet] = useState(false)
+
+    // Create a new workout session when component mounts
+    useEffect(() => {
+        const createWorkout = async () => {
+            if (workoutId || isCreatingWorkout) return
+
+            setIsCreatingWorkout(true)
+            try {
+                const response = await fetch('/api/workouts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dayType: normalizedDayType,
+                        isDeload: false,
+                    }),
+                })
+
+                if (response.ok) {
+                    const data = await response.json()
+                    setWorkoutId(data.id)
+                } else {
+                    console.error('Failed to create workout')
+                }
+            } catch (error) {
+                console.error('Error creating workout:', error)
+            } finally {
+                setIsCreatingWorkout(false)
+            }
+        }
+
+        createWorkout()
+    }, [normalizedDayType, workoutId, isCreatingWorkout])
 
     const totalSets = workout.length * 3
     const completedCount = completedSets.length
@@ -83,15 +118,57 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
         return groups
     }, [workout])
 
-    const handleSetComplete = (exerciseIndex: number, setNumber: number, weight: number, reps: number) => {
+    const handleSetComplete = useCallback(async (exerciseIndex: number, setNumber: number, weight: number, reps: number) => {
+        // Update local state immediately for responsive UI
         setCompletedSets(prev => [...prev, { exerciseIndex, setNumber, weight, reps }])
         setShowTimer(true)
 
+        // Save to database
+        if (workoutId) {
+            setSavingSet(true)
+            try {
+                const exercise = workout[exerciseIndex]
+                const response = await fetch('/api/sets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workoutId,
+                        exerciseName: exercise.exercise,
+                        muscleGroup: exercise.muscle,
+                        setNumber,
+                        weight,
+                        reps,
+                        targetReps: parseInt(exercise.reps.split('-')[1] || exercise.reps),
+                    }),
+                })
+
+                if (!response.ok) {
+                    console.error('Failed to save set to database')
+                }
+            } catch (error) {
+                console.error('Error saving set:', error)
+            } finally {
+                setSavingSet(false)
+            }
+        }
+
         if (completedCount + 1 === totalSets) {
+            // Mark workout as completed
+            if (workoutId) {
+                try {
+                    await fetch(`/api/workouts/${workoutId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completed: true }),
+                    })
+                } catch (error) {
+                    console.error('Error marking workout complete:', error)
+                }
+            }
             setWorkoutComplete(true)
             setShowTimer(false)
         }
-    }
+    }, [workoutId, workout, completedCount, totalSets])
 
     const isSetCompleted = (exerciseIndex: number, setNumber: number) => {
         return completedSets.some(s => s.exerciseIndex === exerciseIndex && s.setNumber === setNumber)
