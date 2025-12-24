@@ -109,6 +109,34 @@ export default async function Home() {
     const currentWeek = settings?.currentWeek || 1
     const weeksUntilDeload = settings ? settings.weeksUntilDeload - ((settings.currentWeek - 1) % settings.weeksUntilDeload) : 5
 
+    // --- Determine next workout type for today (MWF alternating) ---
+    // Get all completed workouts this week, sorted by date ascending
+    const completedThisWeek = workoutHistory
+        .filter(w => w.completed)
+        .sort((a, b) => a.date.localeCompare(b.date))
+
+    // MWF: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+    const today = new Date()
+    const dayOfWeek = today.getDay()
+    // Only highlight on M/W/F
+    const isWorkoutDay = [1, 3, 5].includes(dayOfWeek)
+
+    // Determine the next workout type in the cycle (heavy -> light -> medium)
+    const cycle = ['heavy', 'light', 'medium']
+    // Find the last completed workout type this week (MWF only)
+    const lastCompleted = completedThisWeek
+        .filter(w => {
+            const d = new Date(w.date)
+            const dow = d.getDay()
+            return [1, 3, 5].includes(dow)
+        })
+        .slice(-1)[0]?.dayType
+    let nextWorkoutType: 'heavy' | 'light' | 'medium' = 'heavy'
+    if (lastCompleted) {
+        const idx = cycle.indexOf(lastCompleted)
+        nextWorkoutType = cycle[(idx + 1) % 3] as 'heavy' | 'light' | 'medium'
+    }
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -191,9 +219,9 @@ export default async function Home() {
             <div className="space-y-4">
                 <h2 className="text-2xl font-bold">Start a Workout</h2>
                 <div className="grid gap-4 md:grid-cols-3">
-                    <WorkoutCard dayType="heavy" lastWorkoutDate={lastHeavyDate} />
-                    <WorkoutCard dayType="light" lastWorkoutDate={lastLightDate} />
-                    <WorkoutCard dayType="medium" lastWorkoutDate={lastMediumDate} />
+                    <WorkoutCard dayType="heavy" lastWorkoutDate={lastHeavyDate} isToday={isWorkoutDay && nextWorkoutType === 'heavy'} />
+                    <WorkoutCard dayType="light" lastWorkoutDate={lastLightDate} isToday={isWorkoutDay && nextWorkoutType === 'light'} />
+                    <WorkoutCard dayType="medium" lastWorkoutDate={lastMediumDate} isToday={isWorkoutDay && nextWorkoutType === 'medium'} />
                 </div>
             </div>
 
