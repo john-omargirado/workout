@@ -109,33 +109,15 @@ export default async function Home() {
     const currentWeek = settings?.currentWeek || 1
     const weeksUntilDeload = settings ? settings.weeksUntilDeload - ((settings.currentWeek - 1) % settings.weeksUntilDeload) : 5
 
-    // --- Determine next workout type for today (MWF alternating) ---
-    // Get all completed workouts this week, sorted by date ascending
-    const completedThisWeek = workoutHistory
-        .filter(w => w.completed)
-        .sort((a, b) => a.date.localeCompare(b.date))
 
-    // MWF: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+    // --- Always highlight by day of week: Monday=Heavy, Wednesday=Light, Friday=Medium ---
     const today = new Date()
-    const dayOfWeek = today.getDay()
-    // Only highlight on M/W/F
+    const dayOfWeek = today.getDay() // 1=Mon, 3=Wed, 5=Fri
     const isWorkoutDay = [1, 3, 5].includes(dayOfWeek)
-
-    // Determine the next workout type in the cycle (heavy -> light -> medium)
-    const cycle = ['heavy', 'light', 'medium']
-    // Find the last completed workout type this week (MWF only)
-    const lastCompleted = completedThisWeek
-        .filter(w => {
-            const d = new Date(w.date)
-            const dow = d.getDay()
-            return [1, 3, 5].includes(dow)
-        })
-        .slice(-1)[0]?.dayType
     let nextWorkoutType: 'heavy' | 'light' | 'medium' = 'heavy'
-    if (lastCompleted) {
-        const idx = cycle.indexOf(lastCompleted)
-        nextWorkoutType = cycle[(idx + 1) % 3] as 'heavy' | 'light' | 'medium'
-    }
+    if (dayOfWeek === 1) nextWorkoutType = 'heavy'
+    else if (dayOfWeek === 3) nextWorkoutType = 'light'
+    else if (dayOfWeek === 5) nextWorkoutType = 'medium'
 
     return (
         <div className="space-y-8">
