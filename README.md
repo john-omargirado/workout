@@ -15,11 +15,16 @@ A modern, beautifully designed Next.js 14 application for tracking workouts base
 - 📈 **Double Progression**: Log weights and reps to track progress over time
 - 🔄 **Deload Management**: Track training weeks and schedule deloads
 - 📚 **Exercise Library**: Browse exercises by muscle group and type
+- 📝 **Edit Completed Sets**: Edit weights and reps for any completed set in your workout log
+- 📆 **Weekly History Breakdown**: See a week-by-week summary of your workouts, sets, and volume, with detailed tables for each session
 - 🎨 **Modern UI/UX**: Gradient themes, smooth animations, and responsive design
-- 📱 **Mobile-First**: Optimized layouts for all screen sizes
+- 📱 **Mobile-First**: Optimized layouts for all screen sizes, with a dropdown hamburger menu for navigation
 
 ## 🎨 UI Highlights
 
+- **Mobile Dropdown Navbar**: Clean hamburger menu for easy navigation on phones
+- **Edit Button for Sets**: Instantly update any set's weight or reps if you make a mistake
+- **Weekly Breakdown in History**: View your progress week-by-week, with expandable details for every workout and set
 - **Gradient Hero Headers**: Each day type (Heavy/Light/Medium) has unique color theming
 - **Collapsible Exercise Cards**: Clean, organized workout view with expandable sets
 - **Responsive Grid Layout**: 2-column layout on desktop, single column on mobile
@@ -120,7 +125,7 @@ src/
 ├── app/
 │   ├── api/              # API routes (auth, exercises, workouts, sets)
 │   ├── exercises/        # Exercise library page
-│   ├── history/          # Workout history page
+│   ├── history/          # Workout history page (weekly breakdown, workout/set details)
 │   ├── login/            # Login page
 │   ├── register/         # Registration page
 │   ├── settings/         # Settings page
