@@ -261,7 +261,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     return (
         <div className="min-h-screen pb-20">
             {/* Hero Header */}
-            <div className={`bg-gradient-to-br ${styles.gradient} -mx-4 -mt-4 px-4 pt-4 pb-8 mb-6 relative overflow-hidden`}>
+            <div className={`bg-gradient-to-br ${styles.gradient} -mx-2 sm:-mx-4 -mt-4 px-2 sm:px-4 pt-4 pb-8 mb-6 relative overflow-hidden`}>
                 {/* Background decoration */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white blur-3xl transform translate-x-1/2 -translate-y-1/2" />
@@ -289,23 +289,23 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                         </div>
                     </div>
 
-                    {/* Stats row - compact grid */}
-                    <div className="grid grid-cols-4 gap-2 sm:gap-4 mt-6">
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
-                            <p className="text-xl sm:text-2xl font-bold text-white">{dayInfo.reps}</p>
-                            <p className="text-[10px] sm:text-xs text-white/70">Reps</p>
+                    {/* Stats row - horizontally scrollable on mobile */}
+                    <div className="flex gap-2 sm:gap-4 mt-6 overflow-x-auto pb-2 hide-scrollbar">
+                        <div className="min-w-[80px] bg-white/10 backdrop-blur rounded-xl p-3 text-center flex-shrink-0">
+                            <p className="text-lg sm:text-2xl font-bold text-white">{dayInfo.reps}</p>
+                            <p className="text-[11px] sm:text-xs text-white/70">Reps</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
-                            <p className="text-xl sm:text-2xl font-bold text-white">{dayInfo.rest / 60}m</p>
-                            <p className="text-[10px] sm:text-xs text-white/70">Rest</p>
+                        <div className="min-w-[80px] bg-white/10 backdrop-blur rounded-xl p-3 text-center flex-shrink-0">
+                            <p className="text-lg sm:text-2xl font-bold text-white">{dayInfo.rest / 60}m</p>
+                            <p className="text-[11px] sm:text-xs text-white/70">Rest</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
-                            <p className="text-xl sm:text-2xl font-bold text-white">{workout.length}</p>
-                            <p className="text-[10px] sm:text-xs text-white/70">Exercises</p>
+                        <div className="min-w-[80px] bg-white/10 backdrop-blur rounded-xl p-3 text-center flex-shrink-0">
+                            <p className="text-lg sm:text-2xl font-bold text-white">{workout.length}</p>
+                            <p className="text-[11px] sm:text-xs text-white/70">Exercises</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-2.5 sm:p-3 text-center">
-                            <p className="text-xl sm:text-2xl font-bold text-white uppercase">{weightUnit}</p>
-                            <p className="text-[10px] sm:text-xs text-white/70">Unit</p>
+                        <div className="min-w-[80px] bg-white/10 backdrop-blur rounded-xl p-3 text-center flex-shrink-0">
+                            <p className="text-lg sm:text-2xl font-bold text-white uppercase">{weightUnit}</p>
+                            <p className="text-[11px] sm:text-xs text-white/70">Unit</p>
                         </div>
                     </div>
                 </div>
@@ -389,9 +389,9 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                 </div>
             )}
 
-            {/* Exercises - Responsive Grid */}
+            {/* Exercises - Responsive Grid with better spacing */}
             {!isLoading && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 px-1 sm:px-0">
                     {workout.map((exercise, exerciseIndex) => {
                         const exerciseProgress = getExerciseProgress(exerciseIndex)
                         const isExpanded = expandedExercise === exerciseIndex

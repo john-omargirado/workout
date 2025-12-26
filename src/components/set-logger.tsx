@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Check, Plus, Minus } from 'lucide-react'
+import { Check, Plus, Minus, Pencil, Save } from 'lucide-react'
 
 interface SetLoggerProps {
     exerciseName: string
@@ -42,6 +42,7 @@ export function SetLogger({
     const [weight, setWeight] = useState(initialWeight)
     const [reps, setReps] = useState(initialReps)
     const [completed, setCompleted] = useState(isCompleted)
+    const [editing, setEditing] = useState(false)
 
     // Sync completed state with prop when it changes (e.g., from parent's data)
     useEffect(() => {
@@ -58,12 +59,19 @@ export function SetLogger({
 
     const weightIncrement = getWeightIncrement(weightUnit)
 
+
     const handleComplete = () => {
         if (weight === 0 && reps === 0) return
         setCompleted(true)
+        setEditing(false)
         // Always save weight in kg (convert if needed)
         const weightInKg = weightUnit === 'lbs' ? weight * 0.453592 : weight
         onComplete(weightInKg, reps)
+    }
+
+    const handleEdit = () => {
+        setEditing(true)
+        setCompleted(false)
     }
 
     const adjustWeight = (amount: number) => {
@@ -104,7 +112,7 @@ export function SetLogger({
                             : `bg-gradient-to-br ${gradient} hover:opacity-90`
                             }`}
                         onClick={handleComplete}
-                        disabled={completed || (weight === 0 && reps === 0)}
+                        disabled={completed || editing || (weight === 0 && reps === 0)}
                     >
                         <Check className="h-4 w-4 text-white" />
                     </Button>
@@ -130,7 +138,7 @@ export function SetLogger({
                                 placeholder="0"
                                 onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
                                 className="text-center h-8 text-sm font-semibold rounded-lg pr-7"
-                                disabled={completed}
+                                disabled={completed && !editing}
                             />
                             <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">{weightUnit}</span>
                         </div>
@@ -139,7 +147,7 @@ export function SetLogger({
                             size="icon"
                             className="h-8 w-8 rounded-lg shrink-0"
                             onClick={() => adjustWeight(weightIncrement)}
-                            disabled={completed}
+                            disabled={completed && !editing}
                         >
                             <Plus className="h-3 w-3" />
                         </Button>
@@ -163,7 +171,7 @@ export function SetLogger({
                                 placeholder="0"
                                 onChange={(e) => setReps(parseInt(e.target.value) || 0)}
                                 className="text-center h-8 text-sm font-semibold rounded-lg pr-7"
-                                disabled={completed}
+                                disabled={completed && !editing}
                             />
                             <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">reps</span>
                         </div>
@@ -172,7 +180,7 @@ export function SetLogger({
                             size="icon"
                             className="h-8 w-8 rounded-lg shrink-0"
                             onClick={() => adjustReps(1)}
-                            disabled={completed}
+                            disabled={completed && !editing}
                         >
                             <Plus className="h-3 w-3" />
                         </Button>
@@ -201,7 +209,7 @@ export function SetLogger({
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
                         onClick={() => adjustWeight(-weightIncrement)}
-                        disabled={completed}
+                        disabled={completed && !editing}
                     >
                         <Minus className="h-3 w-3" />
                     </Button>
@@ -221,7 +229,7 @@ export function SetLogger({
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
                         onClick={() => adjustWeight(weightIncrement)}
-                        disabled={completed}
+                        disabled={completed && !editing}
                     >
                         <Plus className="h-3 w-3" />
                     </Button>
@@ -234,7 +242,7 @@ export function SetLogger({
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
                         onClick={() => adjustReps(-1)}
-                        disabled={completed}
+                        disabled={completed && !editing}
                     >
                         <Minus className="h-3 w-3" />
                     </Button>
@@ -254,25 +262,40 @@ export function SetLogger({
                         size="icon"
                         className="h-9 w-9 rounded-lg shrink-0"
                         onClick={() => adjustReps(1)}
-                        disabled={completed}
+                        disabled={completed && !editing}
                     >
                         <Plus className="h-3 w-3" />
                     </Button>
                 </div>
 
                 {/* Complete Button */}
-                <Button
-                    size="icon"
-                    className={`h-9 w-9 rounded-lg transition-all duration-300 shrink-0 ${completed
-                        ? 'bg-green-500 hover:bg-green-600'
-                        : `bg-gradient-to-br ${gradient} hover:opacity-90`
-                        }`}
-                    onClick={handleComplete}
-                    disabled={completed || (weight === 0 && reps === 0)}
-                >
-                    <Check className="h-4 w-4 text-white" />
-                </Button>
+                {completed && !editing ? (
+                    <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-9 w-9 rounded-lg transition-all duration-300 shrink-0"
+                        onClick={handleEdit}
+                        aria-label="Edit set"
+                    >
+                        <Pencil className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                ) : (
+                    <Button
+                        size="icon"
+                        className={`h-9 w-9 rounded-lg transition-all duration-300 shrink-0 ${completed
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : `bg-gradient-to-br ${gradient} hover:opacity-90`
+                            }`}
+                        onClick={handleComplete}
+                        disabled={completed || (weight === 0 && reps === 0)}
+                        aria-label={editing ? 'Save set' : 'Complete set'}
+                    >
+                        {editing ? <Save className="h-4 w-4 text-white" /> : <Check className="h-4 w-4 text-white" />}
+                    </Button>
+                )
+                }
             </div>
         </div>
     )
+
 }
