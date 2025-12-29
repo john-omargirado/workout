@@ -349,7 +349,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
             {!isLoading && workoutComplete && (
                 <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 mb-6 animate-scale-in">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                             <div className="h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center animate-check shadow-lg shadow-green-500/30">
                                 <Trophy className="h-8 w-8 text-white" />
                             </div>
@@ -362,7 +362,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                                 </p>
                             </div>
                         </div>
-                        <div className="mt-6 flex gap-3">
+                        <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full">
                             <Link href="/" className="flex-1">
                                 <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
                                     Back to Dashboard

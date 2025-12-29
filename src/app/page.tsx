@@ -50,6 +50,7 @@ export default async function Home() {
         })
     }
 
+    let currentWeek: number = 1;
     if (session?.user?.id) {
         settings = await prisma.settings.findUnique({
             where: { userId: session.user.id }
@@ -75,8 +76,27 @@ export default async function Home() {
                     where: { completed: true }
                 }
             },
-            orderBy: { date: 'desc' }
+            orderBy: { date: 'asc' } // Ascending for week grouping
         })
+
+        // Find last deload date (if any)
+        const lastDeloadDate = settings?.lastDeloadDate ? new Date(settings.lastDeloadDate) : null
+
+        // Only count completed workouts after last deload
+        const completedWorkouts = allWorkouts.filter(w => w.completed && (!lastDeloadDate || w.date >= lastDeloadDate))
+
+        // Group completed workouts by week (Sunday as start)
+        const weekKeys = new Set<string>()
+        completedWorkouts.forEach(w => {
+            const d = new Date(w.date)
+            d.setHours(0, 0, 0, 0)
+            d.setDate(d.getDate() - d.getDay())
+            weekKeys.add(d.toISOString().slice(0, 10))
+        })
+
+        // Calculate current week based on number of unique weeks since last deload
+        currentWeek = weekKeys.size > 0 ? weekKeys.size : (settings?.currentWeek || 1)
+        // If user just deloaded, weekKeys.size will be 0, so fallback to settings
 
         // Filter for this week's workouts
         const workouts = allWorkouts.filter(w => w.date >= startOfWeek)
@@ -96,8 +116,7 @@ export default async function Home() {
         }))
 
         // Find last completed workout for each day type
-        const completedWorkouts = allWorkouts.filter(w => w.completed)
-        const lastHeavy = completedWorkouts.find(w => w.dayType === 'heavy')
+        const lastHeavy = completedWorkouts.reverse().find(w => w.dayType === 'heavy')
         const lastLight = completedWorkouts.find(w => w.dayType === 'light')
         const lastMedium = completedWorkouts.find(w => w.dayType === 'medium')
 
@@ -106,8 +125,7 @@ export default async function Home() {
         lastMediumDate = lastMedium ? formatDisplayDate(lastMedium.date) : undefined
     }
 
-    const currentWeek = settings?.currentWeek || 1
-    const weeksUntilDeload = settings ? settings.weeksUntilDeload - ((settings.currentWeek - 1) % settings.weeksUntilDeload) : 5
+    const weeksUntilDeload = settings ? settings.weeksUntilDeload - ((currentWeek - 1) % settings.weeksUntilDeload) : 5
 
 
     // --- Always highlight by day of week: Monday=Heavy, Wednesday=Light, Friday=Medium ---
