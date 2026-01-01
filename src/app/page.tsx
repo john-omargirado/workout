@@ -1,141 +1,173 @@
+
+"use client";
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react'
 import { WorkoutCard } from '@/components/workout-card'
 import { VolumeTracker } from '@/components/volume-tracker'
 import { ContributionCalendar } from '@/components/contribution-calendar'
+import { MissedWorkoutModal } from '@/components/missed-workout-modal'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, TrendingUp, Zap } from 'lucide-react'
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+// server libs are not used in client dashboard
 
 // Force dynamic rendering to always show fresh workout data
 export const dynamic = 'force-dynamic'
 
-export default async function Home() {
-    const session = await auth()
+export default function Home() {
+    // TODO: Fetch data from API or use SWR for client-side data
+    // For demo, use static data and state
+    const [missedModalOpen, setMissedModalOpen] = useState(false);
+    const [missedDate, setMissedDate] = useState<string | null>(null);
+    // Real workout data state
+    const [workoutHistory, setWorkoutHistory] = useState<{
+        date: string;
+        dayType: 'heavy' | 'light' | 'medium';
+        completed: boolean;
+        missedReason?: string | null;
+        missedReasonColor?: string | null;
+    }[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [weeklyVolume, setWeeklyVolume] = useState<{
+        name: string;
+        sets: number;
+        target: number;
+    }[]>([]);
 
-    // Get user settings from database
-    let settings = null
-    let weeklyVolume = [
-        { name: 'Chest', sets: 0, target: 9 },
-        { name: 'Upper Back', sets: 0, target: 9 },
-        { name: 'Shoulders', sets: 0, target: 9 },
-        { name: 'Quads', sets: 0, target: 9 },
-        { name: 'Hamstrings', sets: 0, target: 9 },
-        { name: 'Biceps', sets: 0, target: 9 },
-        { name: 'Triceps', sets: 0, target: 9 },
-    ]
+    const { data: session, status } = useSession()
 
-    // Workout history for contribution calendar
-    let workoutHistory: { date: string; dayType: 'heavy' | 'light' | 'medium'; completed: boolean }[] = []
+    // Mock settings/state (replace with real API data)
+    const [currentWeek, setCurrentWeek] = useState<number>(1);
+    const [weeksUntilDeload, setWeeksUntilDeload] = useState<number>(5);
+    const [lastHeavyDate, setLastHeavyDate] = useState<string>('');
+    const [lastLightDate, setLastLightDate] = useState<string>('');
+    const [lastMediumDate, setLastMediumDate] = useState<string>('');
+    const [isWorkoutDay, setIsWorkoutDay] = useState<boolean>(false);
+    const [nextWorkoutType, setNextWorkoutType] = useState<'heavy' | 'light' | 'medium'>('medium');
 
-    // Last completed workout dates by day type
-    let lastHeavyDate: string | undefined
-    let lastLightDate: string | undefined
-    let lastMediumDate: string | undefined
+    // Fetch workouts and settings - extracted so it can be reused after save
+    const fetchAll = async () => {
+        setLoading(true);
+        // Fetch workouts
+        const res = await fetch('/api/workouts');
+        const workouts = await res.json();
+        // Fetch settings
+        const settingsRes = await fetch('/api/settings');
+        const settings = await settingsRes.json();
 
-    // Helper to format date as YYYY-MM-DD in UTC (consistent across server/client)
-    const formatDateUTC = (date: Date): string => {
-        const year = date.getUTCFullYear()
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0')
-        const day = String(date.getUTCDate()).padStart(2, '0')
-        return `${year}-${month}-${day}`
-    }
-
-    // Helper to format date for display (e.g., "Dec 22, 2025")
-    const formatDisplayDate = (date: Date): string => {
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        })
-    }
-
-    let currentWeek: number = 1;
-    if (session?.user?.id) {
-        settings = await prisma.settings.findUnique({
-            where: { userId: session.user.id }
-        })
-
-        // Get this week's workout data
-        const startOfWeek = new Date()
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
-        startOfWeek.setHours(0, 0, 0, 0)
-
-        // Get workouts for the past 20 weeks for the contribution calendar
-        const twentyWeeksAgo = new Date()
-        twentyWeeksAgo.setDate(twentyWeeksAgo.getDate() - 140)
-        twentyWeeksAgo.setHours(0, 0, 0, 0)
-
-        const allWorkouts = await prisma.workout.findMany({
-            where: {
-                userId: session.user.id,
-                date: { gte: twentyWeeksAgo }
-            },
-            include: {
-                workoutSets: {
-                    where: { completed: true }
-                }
-            },
-            orderBy: { date: 'asc' } // Ascending for week grouping
-        })
-
-        // Find last deload date (if any)
-        const lastDeloadDate = settings?.lastDeloadDate ? new Date(settings.lastDeloadDate) : null
-
-        // Only count completed workouts after last deload
-        const completedWorkouts = allWorkouts.filter(w => w.completed && (!lastDeloadDate || w.date >= lastDeloadDate))
-
-        // Group completed workouts by week (Sunday as start)
-        const weekKeys = new Set<string>()
-        completedWorkouts.forEach(w => {
-            const d = new Date(w.date)
-            d.setHours(0, 0, 0, 0)
-            d.setDate(d.getDate() - d.getDay())
-            weekKeys.add(d.toISOString().slice(0, 10))
-        })
-
-        // Calculate current week based on number of unique weeks since last deload
-        currentWeek = weekKeys.size > 0 ? weekKeys.size : (settings?.currentWeek || 1)
-        // If user just deloaded, weekKeys.size will be 0, so fallback to settings
-
-        // Filter for this week's workouts
-        const workouts = allWorkouts.filter(w => w.date >= startOfWeek)
-
-        // Calculate weekly volume
-        const completedDays = workouts.filter(w => w.completed).length
-        weeklyVolume = weeklyVolume.map(v => ({
-            ...v,
-            sets: completedDays * 3
-        }))
-
-        // Transform for contribution calendar
-        workoutHistory = allWorkouts.map(w => ({
-            date: formatDateUTC(w.date),
-            dayType: w.dayType as 'heavy' | 'light' | 'medium',
+        // Build workout history for calendar
+        const history = workouts.map((w: any) => ({
+            date: w.date.slice(0, 10),
+            dayType: w.dayType,
             completed: w.completed,
-        }))
+            missedReason: w.missedReason,
+            missedReasonColor: w.missedReasonColor,
+        }));
+        setWorkoutHistory(history);
 
-        // Find last completed workout for each day type
-        const lastHeavy = completedWorkouts.reverse().find(w => w.dayType === 'heavy')
-        const lastLight = completedWorkouts.find(w => w.dayType === 'light')
-        const lastMedium = completedWorkouts.find(w => w.dayType === 'medium')
+        // Calculate weekly volume (last 7 days)
+        const muscleMap: Record<string, { sets: number; target: number }> = {};
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        for (const w of workouts) {
+            if (!w.completed) continue;
+            const wDate = new Date(w.date);
+            if (wDate < weekAgo) continue;
+            for (const set of w.workoutSets || []) {
+                const muscle = set.exercise?.muscleGroup?.name || 'Other';
+                if (!muscleMap[muscle]) muscleMap[muscle] = { sets: 0, target: 12 };
+                muscleMap[muscle].sets += 1;
+            }
+        }
+        setWeeklyVolume(Object.entries(muscleMap).map(([name, v]) => ({ name, ...v })));
 
-        lastHeavyDate = lastHeavy ? formatDisplayDate(lastHeavy.date) : undefined
-        lastLightDate = lastLight ? formatDisplayDate(lastLight.date) : undefined
-        lastMediumDate = lastMedium ? formatDisplayDate(lastMedium.date) : undefined
+        // Set current week and deload info
+        // If settings.currentWeek is unset or 1, derive week from workout history (based on Sunday-start weeks)
+        const today = new Date()
+        const todayStart = new Date(today)
+        todayStart.setHours(0, 0, 0, 0)
+        const getWeekStart = (d: Date) => {
+            const dd = new Date(d)
+            dd.setHours(0, 0, 0, 0)
+            dd.setDate(dd.getDate() - dd.getDay()) // Sunday start
+            return dd
+        }
+
+        let derivedWeek = 1
+        const completedWorkouts = workouts.filter((w: any) => w.completed)
+        if (completedWorkouts.length > 0) {
+            const earliest = completedWorkouts.reduce((acc: any, w: any) => acc ? (new Date(w.date) < new Date(acc.date) ? w : acc) : w, null)
+            if (earliest) {
+                const firstWeekStart = getWeekStart(new Date(earliest.date))
+                const diffMs = todayStart.getTime() - firstWeekStart.getTime()
+                derivedWeek = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1
+                if (derivedWeek < 1) derivedWeek = 1
+            }
+        }
+
+        const settingsWeek = settings?.currentWeek || 1
+        setCurrentWeek(Math.max(settingsWeek, derivedWeek))
+        setWeeksUntilDeload(settings.weeksUntilDeload || 5);
+
+        // Set last workout dates and next workout type
+        let lastHeavy = '', lastLight = '', lastMedium = '';
+        let todayType: 'heavy' | 'light' | 'medium' = 'medium';
+        let isTodayWorkout = false;
+        const todayStr = new Date().toISOString().slice(0, 10);
+        for (const w of workouts) {
+            if (w.dayType === 'heavy' && w.completed && (!lastHeavy || w.date > lastHeavy)) lastHeavy = w.date.slice(0, 10);
+            if (w.dayType === 'light' && w.completed && (!lastLight || w.date > lastLight)) lastLight = w.date.slice(0, 10);
+            if (w.dayType === 'medium' && w.completed && (!lastMedium || w.date > lastMedium)) lastMedium = w.date.slice(0, 10);
+            if (w.date.slice(0, 10) === todayStr) {
+                isTodayWorkout = true;
+                todayType = w.dayType;
+            }
+        }
+        setLastHeavyDate(lastHeavy);
+        setLastLightDate(lastLight);
+        setLastMediumDate(lastMedium);
+        setIsWorkoutDay(isTodayWorkout);
+        setNextWorkoutType(todayType);
+        setLoading(false);
     }
 
-    const weeksUntilDeload = settings ? settings.weeksUntilDeload - ((currentWeek - 1) % settings.weeksUntilDeload) : 5
+    useEffect(() => {
+        if (status === 'authenticated') {
+            fetchAll()
+        }
+    }, [status])
 
+    // Handler for missed day click
+    const handleMissedDayClick = (date: string) => {
+        setMissedDate(date);
+        setMissedModalOpen(true);
+    };
 
-    // --- Always highlight by day of week: Monday=Heavy, Wednesday=Light, Friday=Medium ---
-    const today = new Date()
-    const dayOfWeek = today.getDay() // 1=Mon, 3=Wed, 5=Fri
-    const isWorkoutDay = [1, 3, 5].includes(dayOfWeek)
-    let nextWorkoutType: 'heavy' | 'light' | 'medium' = 'heavy'
-    if (dayOfWeek === 1) nextWorkoutType = 'heavy'
-    else if (dayOfWeek === 3) nextWorkoutType = 'light'
-    else if (dayOfWeek === 5) nextWorkoutType = 'medium'
+    // Handler for saving missed workout - POST and refresh
+    const handleSaveMissed = async (reason: string, color: string) => {
+        if (!missedDate) return
+        try {
+            await fetch('/api/workouts/missed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: missedDate, reason, color }),
+            })
+            // refresh data
+            await fetchAll()
+        } catch (err) {
+            console.error('Error saving missed workout', err)
+        }
+        setMissedModalOpen(false);
+        setMissedDate(null);
+    };
+
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+
+    // Only allow editing for missing days (no completed or missedReason)
+    const editableDates = (date: string) => {
+        const found = workoutHistory.find(w => w.date === date);
+        return !found || (!found.completed && !found.missedReason);
+    };
 
     return (
         <div className="space-y-8">
@@ -225,8 +257,21 @@ export default async function Home() {
                 </div>
             </div>
 
+
             {/* Contribution Calendar */}
-            <ContributionCalendar workouts={workoutHistory} weeks={20} />
+            <ContributionCalendar
+                workouts={workoutHistory}
+                weeks={20}
+                onMissedDayClick={(date) => {
+                    if (editableDates(date)) handleMissedDayClick(date);
+                }}
+            />
+            <MissedWorkoutModal
+                open={missedModalOpen}
+                date={missedDate || ''}
+                onClose={() => setMissedModalOpen(false)}
+                onSave={handleSaveMissed}
+            />
 
             {/* Volume Tracker */}
             <VolumeTracker muscleGroups={weeklyVolume} />

@@ -70,6 +70,26 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
     const [isLoading, setIsLoading] = useState(true)
     const [savingSet, setSavingSet] = useState(false)
     const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
+    const [missedReason, setMissedReason] = useState<string>("");
+    const [missedColor, setMissedColor] = useState<string>("bg-yellow-400");
+    const [workoutMissed, setWorkoutMissed] = useState(false);
+    // Mark workout as missed
+    const handleMissedWorkout = async () => {
+        if (!workoutId || !missedReason) return;
+        setIsLoading(true);
+        try {
+            await fetch(`/api/workouts/${workoutId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: false, missedReason, missedReasonColor: missedColor }),
+            });
+            setWorkoutMissed(true);
+        } catch (error) {
+            console.error('Error marking workout as missed:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Fetch user settings (including weight unit)
     useEffect(() => {
@@ -321,9 +341,9 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                         </div>
                     </CardContent>
                 </Card>
-            )}
+            )
 
-            {/* Progress Card - Compact */}
+            /* Progress Card - Compact */}
             {!isLoading && (
                 <Card className={`mb-4 border-2 ${styles.border} ${styles.bgLight} animate-in`}>
                     <CardContent className="py-3 px-4">
@@ -346,7 +366,7 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
             )}
 
             {/* Workout Complete Card */}
-            {!isLoading && workoutComplete && (
+            {!isLoading && workoutComplete && !workoutMissed && (
                 <Card className="border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 mb-6 animate-scale-in">
                     <CardContent className="pt-6">
                         <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
@@ -377,6 +397,64 @@ export default function WorkoutPage({ params }: WorkoutPageProps) {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Missed Workout Card */}
+            {!isLoading && !workoutComplete && !workoutMissed && (
+                <Card className="border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 mb-6 animate-scale-in">
+                    <CardContent className="pt-6">
+                        <div className="flex flex-col gap-4 items-center">
+                            <div className="h-16 w-16 rounded-full flex items-center justify-center animate-check shadow-lg" style={{ background: missedColor }}>
+                                <span className="text-3xl">😔</span>
+                            </div>
+                            <h2 className="text-xl font-bold text-yellow-700 dark:text-yellow-300">Missed Workout?</h2>
+                            <p className="text-yellow-600 dark:text-yellow-400">If you missed this session, log a reason below:</p>
+                            <input
+                                type="text"
+                                className="border rounded px-3 py-2 w-full max-w-xs"
+                                placeholder="Reason (e.g. Sick, Busy, Travel)"
+                                value={missedReason}
+                                onChange={e => setMissedReason(e.target.value)}
+                            />
+                            <div className="flex gap-2 items-center">
+                                <span className="text-xs">Color:</span>
+                                <button className="w-6 h-6 rounded-full border-2 border-yellow-400" style={{ background: '#facc15' }} onClick={() => setMissedColor('#facc15')}></button>
+                                <button className="w-6 h-6 rounded-full border-2 border-red-400" style={{ background: '#f87171' }} onClick={() => setMissedColor('#f87171')}></button>
+                                <button className="w-6 h-6 rounded-full border-2 border-blue-400" style={{ background: '#60a5fa' }} onClick={() => setMissedColor('#60a5fa')}></button>
+                                <button className="w-6 h-6 rounded-full border-2 border-gray-400" style={{ background: '#a3a3a3' }} onClick={() => setMissedColor('#a3a3a3')}></button>
+                            </div>
+                            <Button className="mt-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold" onClick={handleMissedWorkout} disabled={!missedReason}>
+                                Log Missed Workout
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Missed Workout Confirmation */}
+            {!isLoading && workoutMissed && (
+                <Card className="border-2 border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30 mb-6 animate-scale-in">
+                    <CardContent className="pt-6 flex flex-col items-center">
+                        <div className="h-16 w-16 rounded-full flex items-center justify-center animate-check shadow-lg" style={{ background: missedColor }}>
+                            <span className="text-3xl">😔</span>
+                        </div>
+                        <h2 className="text-xl font-bold text-yellow-700 dark:text-yellow-300 mt-2">Missed Workout Logged</h2>
+                        <p className="text-yellow-600 dark:text-yellow-400 mt-1">Reason: <span className="font-semibold">{missedReason}</span></p>
+                        <div className="mt-4 flex gap-3 w-full">
+                            <Link href="/" className="flex-1">
+                                <Button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-900 font-bold">
+                                    Back to Dashboard
+                                </Button>
+                            </Link>
+                            <Link href="/history" className="flex-1">
+                                <Button variant="outline" className="w-full border-yellow-400 text-yellow-700 hover:bg-yellow-50">
+                                    View History
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
 
             {/* Rest Timer */}
             {showTimer && !workoutComplete && (

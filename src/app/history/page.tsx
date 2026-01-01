@@ -1,6 +1,6 @@
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { EditMissedWorkout } from '@/components/edit-missed-workout'
 import { Calendar, Check, Dumbbell, Scale, ChevronDown, ChevronUp } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
@@ -20,7 +20,7 @@ export default async function HistoryPage() {
     const workouts = session?.user?.id ? await prisma.workout.findMany({
         where: {
             userId: session.user.id,
-            completed: true
+            OR: [{ completed: true }, { missedReason: { not: null } }]
         },
         include: {
             workoutSets: {
@@ -39,6 +39,8 @@ export default async function HistoryPage() {
         dayType: string
         notes: string | null
         completed: boolean
+        missedReason?: string | null
+        missedReasonColor?: string | null
         workoutSets: Array<{
             id: string
             weight: number
@@ -183,6 +185,18 @@ export default async function HistoryPage() {
                                                             <Calendar className="h-3 w-3" />
                                                             {formatDate(workout.date)}
                                                         </span>
+                                                        {workout.missedReason && (
+                                                            <>
+                                                                <Badge variant="outline">Missed</Badge>
+                                                                <div className="ml-2">
+                                                                    <EditMissedWorkout
+                                                                        date={new Date(workout.date).toISOString().slice(0, 10)}
+                                                                        initialReason={workout.missedReason}
+                                                                        initialColor={workout.missedReasonColor || undefined}
+                                                                    />
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                         <span className="flex items-center gap-1">
@@ -197,6 +211,11 @@ export default async function HistoryPage() {
                                                     {workout.notes && (
                                                         <p className="text-sm mt-2 italic text-muted-foreground">
                                                             &ldquo;{workout.notes}&rdquo;
+                                                        </p>
+                                                    )}
+                                                    {workout.missedReason && (
+                                                        <p className="text-sm mt-2 italic text-muted-foreground">
+                                                            Missed: &ldquo;{workout.missedReason}&rdquo;
                                                         </p>
                                                     )}
                                                     {/* Workout Details Table */}

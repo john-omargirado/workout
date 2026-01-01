@@ -49,17 +49,19 @@ model Exercise {
 
 // Workout sessions
 model Workout {
-  id          String       @id @default(cuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date        DateTime     @default(now())
-  dayType     String       // "heavy", "light", "medium"
-  isDeload    Boolean      @default(false)
-  notes       String?
-  workoutSets WorkoutSet[]
-  completed   Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                String       @id @default(cuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date              DateTime     @default(now())
+  dayType           String       // "heavy", "light", "medium"
+  isDeload          Boolean      @default(false)
+  notes             String?
+  missedReason      String?
+  missedReasonColor String?
+  workoutSets       WorkoutSet[]
+  completed         Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 }
 
 // Individual sets within a workout

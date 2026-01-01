@@ -8,6 +8,8 @@ interface WorkoutDay {
     date: string // YYYY-MM-DD format
     dayType: 'heavy' | 'light' | 'medium'
     completed: boolean
+    missedReason?: string | null
+    missedReasonColor?: string | null
 }
 
 interface ContributionCalendarProps {
@@ -42,7 +44,19 @@ const formatDateLocal = (date: Date): string => {
     return `${year}-${month}-${day}`
 }
 
-export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalendarProps) {
+// Helper to build a YYYY-MM-DD key using UTC components (server canonical date)
+const formatDateUTCKey = (input: Date | string): string => {
+    if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+        return input
+    }
+    const d = typeof input === 'string' ? new Date(input) : input
+    const year = d.getUTCFullYear()
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
+
+export function ContributionCalendar({ workouts, weeks = 12, onMissedDayClick }: ContributionCalendarProps & { onMissedDayClick?: (date: string) => void }) {
     type CalendarDay = { date: Date; workout?: WorkoutDay }
     const [calendarData, setCalendarData] = useState<CalendarDay[][] | null>(null)
     const [currentStreak, setCurrentStreak] = useState<number | null>(null)
@@ -51,24 +65,30 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
         // Calendar grid
         const today = new Date()
         today.setHours(0, 0, 0, 0)
+        // Map workouts by local YYYY-MM-DD — this matches how History formats dates
         const workoutMap = new Map<string, WorkoutDay>()
         workouts.forEach((w: WorkoutDay) => {
-            const existing = workoutMap.get(w.date)
+            const rawDateStr = w.date
+            const iso = rawDateStr.includes('T') ? rawDateStr : `${rawDateStr}T00:00:00`
+            const localKey = formatDateLocal(new Date(iso))
+            const existing = workoutMap.get(localKey)
             if (!existing || (w.completed && !existing.completed)) {
-                workoutMap.set(w.date, w)
+                workoutMap.set(localKey, w)
             }
         })
+        // Compute start of calendar `weeks` weeks ago and align to Sunday
         const endOfCalendar = new Date(today)
-        const currentDayOfWeek = today.getDay()
         const startOfCalendar = new Date(today)
-        startOfCalendar.setDate(today.getDate() - (weeks * 7) + (7 - currentDayOfWeek))
+        // Move back `weeks * 7` days
+        startOfCalendar.setDate(startOfCalendar.getDate() - weeks * 7)
+        // Align start to Sunday to match History's week grouping (History uses Sunday as week start)
         const startDayOfWeek = startOfCalendar.getDay()
         startOfCalendar.setDate(startOfCalendar.getDate() - startDayOfWeek)
         const days: CalendarDay[] = []
         const currentDate = new Date(startOfCalendar)
         while (currentDate <= today) {
-            const dateStr = formatDateLocal(currentDate)
-            const workout = workoutMap.get(dateStr)
+            const localKey = formatDateLocal(currentDate)
+            const workout = workoutMap.get(localKey)
             days.push({
                 date: new Date(currentDate),
                 workout: workout,
@@ -207,6 +227,7 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                             const isToday = day.date.toDateString() === now.toDateString()
                                             const isFuture = day.date > now
                                             const hasWorkout = day.workout?.completed
+                                            const isMissed = !!day.workout && !day.workout.completed && !!(day.workout as any).missedReason
 
                                             return (
                                                 <div
@@ -216,15 +237,23 @@ export function ContributionCalendar({ workouts, weeks = 12 }: ContributionCalen
                                                             ? 'bg-muted/20'
                                                             : hasWorkout
                                                                 ? `${dayTypeColors[day.workout!.dayType].bg} ${dayTypeColors[day.workout!.dayType].hover} shadow-sm`
-                                                                : 'bg-muted/60 hover:bg-muted'
+                                                                : isMissed
+                                                                    ? 'shadow-sm border border-muted'
+                                                                    : `bg-muted/60${onMissedDayClick ? ' hover:bg-muted/80 cursor-pointer' : ''}`
                                                         }
                                                         ${isToday ? 'ring-2 ring-offset-1 ring-offset-background ring-primary' : ''}
                                                     `}
+                                                    style={isMissed ? { backgroundColor: day.workout!.missedReasonColor || undefined } : undefined}
                                                     title={`${day.date.toLocaleDateString('en-US', {
                                                         weekday: 'short',
                                                         month: 'short',
                                                         day: 'numeric',
-                                                    })}${hasWorkout ? ` - ${day.workout!.dayType.charAt(0).toUpperCase() + day.workout!.dayType.slice(1)} Day` : ''}`}
+                                                    })}${hasWorkout ? ` - ${day.workout!.dayType.charAt(0).toUpperCase() + day.workout!.dayType.slice(1)} Day` : isMissed ? ` - Missed: ${day.workout!.missedReason}` : ''}`}
+                                                    onClick={() => {
+                                                        if (!hasWorkout && !isFuture && onMissedDayClick) {
+                                                            onMissedDayClick(formatDateUTCKey(day.date));
+                                                        }
+                                                    }}
                                                 />
                                             )
                                         })}
