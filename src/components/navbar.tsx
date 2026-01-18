@@ -53,7 +53,7 @@ export function Navbar() {
     ) : null
 
     return (
-        <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="border-b bg-background/95 supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center justify-between">
                 <Link href="/" className="mr-4 flex items-center gap-2">
                     <Dumbbell className="h-6 w-6 text-primary" />
@@ -102,7 +102,7 @@ export function Navbar() {
                     </div>
                 </div>
 
-                {/* Hamburger icon for mobile */}
+                {/* Hamburger icon for mobile - now inside container */}
                 <button
                     className="md:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-ring"
                     onClick={() => setMobileMenuOpen((open) => !open)}
@@ -110,37 +110,41 @@ export function Navbar() {
                 >
                     {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
+            </div>
 
-                {/* Mobile menu overlay */}
-                {mobileMenuOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-2 mx-2 z-50 bg-background border border-border shadow-xl rounded-xl flex flex-col md:hidden animate-in fade-in slide-in-from-top-5 overflow-hidden">
-                        <nav className="flex flex-col gap-2 px-6 py-4 text-lg font-semibold">
-                            <Link href="/" className="flex items-center gap-3 py-2 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
+            {/* Mobile menu dropdown - positioned from the right */}
+            {mobileMenuOpen && (
+                <div className="md:hidden absolute right-0 left-0 top-14 z-50 bg-background border-b shadow-lg">
+                    <div className="container py-4">
+                        <nav className="flex flex-col gap-2 text-base font-medium mb-4">
+                            <Link href="/" className="flex items-center gap-3 py-2 px-3 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
                                 <Home className="h-5 w-5" /> Dashboard
                             </Link>
-                            <Link href="/history" className="flex items-center gap-3 py-2 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
+                            <Link href="/history" className="flex items-center gap-3 py-2 px-3 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
                                 <Calendar className="h-5 w-5" /> History
                             </Link>
-                            <Link href="/exercises" className="flex items-center gap-3 py-2 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
+                            <Link href="/exercises" className="flex items-center gap-3 py-2 px-3 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
                                 <BookOpen className="h-5 w-5" /> Exercises
                             </Link>
-                            <Link href="/settings" className="flex items-center gap-3 py-2 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
+                            <Link href="/settings" className="flex items-center gap-3 py-2 px-3 rounded hover:bg-accent transition" onClick={() => setMobileMenuOpen(false)}>
                                 <Settings className="h-5 w-5" /> Settings
                             </Link>
                         </nav>
-                        <div className="flex flex-col gap-2 px-6 pb-4">
-                            <DarkModeToggle />
+                        <div className="flex flex-col gap-2 pt-2 border-t">
+                            <div className="px-3 py-2">
+                                <DarkModeToggle />
+                            </div>
                             {session ? (
                                 <>
-                                    <div className="flex items-center gap-3 text-base text-muted-foreground py-2">
+                                    <div className="flex items-center gap-3 text-sm text-muted-foreground py-2 px-3">
                                         <User className="h-5 w-5" />
                                         <span className="font-medium">{session.user?.name || session.user?.email}</span>
                                     </div>
                                     <Button
                                         variant="ghost"
-                                        size="lg"
+                                        size="sm"
                                         onClick={() => { setMobileMenuOpen(false); signOut({ callbackUrl: '/login' }) }}
-                                        className="flex items-center gap-2 w-full justify-start text-lg py-2"
+                                        className="flex items-center gap-2 w-full justify-start"
                                     >
                                         <LogOut className="h-5 w-5" />
                                         <span>Sign Out</span>
@@ -151,10 +155,10 @@ export function Navbar() {
                                     {status !== 'loading' && (
                                         <>
                                             <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                                <Button variant="ghost" size="lg" className="w-full justify-start text-lg py-2">Sign In</Button>
+                                                <Button variant="ghost" size="sm" className="w-full justify-start">Sign In</Button>
                                             </Link>
                                             <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                                                <Button size="lg" className="w-full justify-start text-lg py-2">Get Started</Button>
+                                                <Button size="sm" className="w-full justify-start">Get Started</Button>
                                             </Link>
                                         </>
                                     )}
@@ -162,8 +166,8 @@ export function Navbar() {
                             )}
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </nav>
-    )
+    );
 }
